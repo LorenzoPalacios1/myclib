@@ -251,26 +251,33 @@ int strToInt(const char *str, int *num)
     // later parsing loop to ignore this character
     // Also used as a boolean to convert the resultant int to a negative if applicable
     const unsigned short isNegative = (*str == '-');
+    
     if (STR_SIZE == 0)
     {
         fprintf(stderr, "\nstrToInt(): Invalid string length: %u; No conversion occurred\n", STR_SIZE);
         return ERRCODE_DEFAULT;
     }
-    else if (STR_SIZE == 1 && isNegative)
+    else if (STR_SIZE == 1 && isNegative) // Preemptively handling a single negative dash being passed
     {
         return ERRCODE_DEFAULT;
     }
 
-    // Removing any leading zeros
+    // Removing any leading zeros and checking for invalid characters since the passed str should contain
+    // only numerical characters, and any leading non-numerical characters would simply be ignored rather
+    // than stopping function flow.
+    // Otherwise, this would make things like "asd8327" valid, which would cause 'num' to equal 8327, but
+    // things like "8327asd" would cause the function to terminate instead of writing anything.
     unsigned short endIndex = isNegative;
     while (endIndex < STR_SIZE && str[endIndex] == '0')
     {
+        if (!isNumerical(str[endIndex]))
+            return ERRCODE_DEFAULT;
         endIndex++;
     }
 
-    // If, for whatever reason, "-0" is the passed string, we handle that below since the above loop
-    // would normally discard it
-    if (endIndex == STR_SIZE - 1 && str[endIndex] == '0')
+    // If, for whatever reason, "-0000" or similar is the passed string, we handle that below since the
+    // above loop would normally discard it
+    if (endIndex == STR_SIZE && str[endIndex - 1] == '0')
     {
         *num = 0;
         return ERRCODE_SUCCESS;
