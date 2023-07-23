@@ -17,6 +17,8 @@
 
 // Used by strToInt()
 #define INT_MAX_PLACEVALUE 1000000000
+#define INT_OVERFLOW_CHK 147483647
+#define UINT_OVERFLOW_CHK (INT_OVERFLOW_CHK + 1)
 
 /*
  * Will discard a line of input within *stream up to a newline character.
@@ -251,7 +253,7 @@ int strToInt(const char *str, int *num)
     // later parsing loop to ignore this character
     // Also used as a boolean to convert the resultant int to a negative if applicable
     const unsigned short isNegative = (*str == '-');
-    
+
     if (STR_SIZE == 0)
     {
         fprintf(stderr, "\nstrToInt(): Invalid string length: %u; No conversion occurred\n", STR_SIZE);
@@ -265,10 +267,10 @@ int strToInt(const char *str, int *num)
     // Removing any leading zeros and checking for invalid characters since the passed str should contain
     // only numerical characters, and any leading non-numerical characters would simply be ignored rather
     // than stopping function flow.
-    // Otherwise, this would make things like "asd8327" valid, which would cause 'num' to equal 8327, but
-    // things like "8327asd" would cause the function to terminate instead of writing anything.
+    // Otherwise, this would make things like "asd8327" valid, causing 'num' to equal 8327, but things like
+    // "8327asd" would cause the function to terminate, leaving 'num' unchanged.
     unsigned short endIndex = isNegative;
-    while (endIndex < STR_SIZE && str[endIndex] == '0')
+    while ((endIndex < STR_SIZE && str[endIndex] == '0') || !isNumerical(str[endIndex]))
     {
         if (!isNumerical(str[endIndex]))
             return ERRCODE_DEFAULT;
@@ -295,13 +297,17 @@ int strToInt(const char *str, int *num)
     int placeValue = 1;
 
     // Iterating over 'str' in reverse so we can assign the correct place values with as little hassle
-    // as possible
+    // as possible.
     // "STR_SIZE - 1" to skip the null terminator
     short i = STR_SIZE - 1;
     for (; i >= endIndex; i--)
     {
+        // This value will only hold a single digit's worth since it calls charToInt(), hence
+        // "unsigned short"
+        const unsigned short currentNum = charToInt(str[i]);
+
         // We can skip over any values of 0
-        if (str[i] == '0')
+        if (currentNum == '0')
         {
             placeValue *= 10;
             continue;
@@ -309,11 +315,39 @@ int strToInt(const char *str, int *num)
 
         if (isNumerical(str[i]))
         {
+
             // Ensuring no overflow will occur
-            if (tempNum - 147483647 <= 0)
+            if (tempNum - 147483647 <= 0 && placeValue != INT_MAX_PLACEVALUE)
             {
-                tempNum += charToInt(str[i]) * placeValue;
+                tempNum += currentNum * placeValue;
                 placeValue *= 10;
+            }
+            // Safely handling anything that approaches INT_MAX or INT_MIN
+            else if (currentNum <= 2)
+            {
+                // If the digits added to 'tempNum' so far are below INT_MAX (since 'tempNum' should never
+                // be negative), there can be nothing else added without risking overflow, so we break out.
+                // The number could still be negative however, so we let the function run to its end to
+                // handle this.
+                if (tempNum - INT_OVERFLOW_CHK <= 0)
+                {
+                    tempNum += currentNum * placeValue;
+                    break;
+                }
+                // This just handles the edge case of INT_MIN being greater than INT_MAX by 1, which would
+                // cause the above if-statement to not run (and int would overflow anyway if it did).
+                // In that case, the value is almost definitely INT_MIN, so we just assign that to 'num'.
+                if (isNegative && tempNum - UINT_OVERFLOW_CHK == 0)
+                {
+                    *num = INT_MIN;
+                    return ERRCODE_SUCCESS;
+                }
+                // Catching overflow
+                return ERRCODE_DEFAULT;
+            }
+            else
+            {
+                return ERRCODE_DEFAULT;
             }
         }
         else // Breaking upon hitting anything non-numeric
