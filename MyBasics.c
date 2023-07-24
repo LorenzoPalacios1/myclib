@@ -5,37 +5,40 @@
 #include <time.h>
 #include "MyBasics.h"
 
+
 #define ERRCODE_SUCCESS 0     // Code denoting a successful execution.
 #define ERRCODE_DEFAULT 1     // An undefined error code; consult the function's documentation.
 #define ERRCODE_NULL_PTR 2    // General code denoting a bad or NULL primitive pointer argument (eg. char* or int*).
 #define ERRCODE_NULL_FILE 3   // Code denoting a bad or NULL pointer to a FILE argument.
 #define ERRCODE_FILE_AT_EOF 4 // Code denoting that the given FILE is at EOF *before* any reading occurred.
+#define ERRCODE_BAD_STR 5
 
-// Used by strToInt() and readInt().
+// Determines the maximum number of characters fDiscardLine() should discard before
+// stopping if it doesn't reach a newline character.
+#define FDISCARDLINE_MAX_READS 2000000
+
 // Determines the number of characters that would be within the string equivalent of INT_MAX.
 #define INT_MAX_CHARS 11
 
-// Used by strToInt()
+// Miscellaneous macros used by strToInt()
 #define INT_MAX_PLACEVALUE 1000000000
 #define INT_OVERFLOW_CHK 147483647
 #define UINT_OVERFLOW_CHK (INT_OVERFLOW_CHK + 1)
 
 /*
- * Will discard a line of input within *stream up to a newline character.
- * Will discard the newline character as well.
+ * Will discard a line of input within 'stream' until meeting a newline character or EOF.
+ * Note that this will also discard the newline character.
  *
  * Use fseek(stdin, 0, SEEK_END) to clear the contents of 'stdin' instead of using this function.
  *
  * To prevent potential hanging, the loop within this function will terminate after
- * 2000000 character reads.
+ * reading an FDISCARDLINE_MAX_READS number of characters from 'stream'.
  *
  * Returns 0 on success, and 1 upon failure.
  */
 inline int fDiscardLine(FILE *stream)
 {
-    static const int MAX_NUM_CHARS = 2000000;
-
-    for (int i = 0; i < MAX_NUM_CHARS; i++)
+    for (int i = 0; i < FDISCARDLINE_MAX_READS; i++)
     {
         if (getc(stream) == '\n' || feof(stream))
             return ERRCODE_SUCCESS;
@@ -53,7 +56,9 @@ inline int fDiscardLine(FILE *stream)
  * if no delimiter was read or EOF was not met. If this occurs, the returned value will be length + 1.
  *
  * Returns the length of the string INCLUDING the null terminator, or -1 upon an error.
+ * 
  * Returns 0 if stream is at EOF, or if the first character read is the specified delimiter.
+ * If this function returns 0 or -1, 'str' WILL BE LEFT UNCHANGED (that is, nothing will be written).
  */
 size_t getStr(char **str, const char delim, const size_t length, FILE *stream)
 {
@@ -87,7 +92,7 @@ size_t getStr(char **str, const char delim, const size_t length, FILE *stream)
     // Reading from stream into str
     // "length + 1" to ensure there is always space for a null terminator
     char buffer[length + 1];
-    unsigned i = 0;
+    size_t i = 0;
     for (; i < length; i++)
     {
         buffer[i] = getc(stream);
@@ -186,9 +191,9 @@ int indexOf(const char *str, const char letter, const size_t offset)
 }
 
 /*
- * Returns non-zero, true, if the passed char represents an alphabetical letter.
+ * Returns true, if the passed char represents an alphabetical letter.
  *
- * Otherwise, returns 0, false.
+ * Otherwise returns false.
  */
 inline int isAlphabetical(const char letter)
 {
@@ -230,19 +235,15 @@ inline short int charToInt(const char num)
 /*
  * Parses the passed string into an int which will be written to the second argument, 'num'.
  *
- * If this function fails, 'num' will be left unchanged and an error code returned.
- *
- * Returns 1 if the passed arguments were valid, but no characters in the stream were valid, or if
- * type 'int' was overflowed.
- *
- * Otherwise, this function returns 0 on success.
+ * If this function fails, such as via invalid characters or overflow, 'num' will be left unchanged
+ * and an error code returned.
  */
 int strToInt(const char *str, int *num)
 {
     // Validating the string's existence
     if (str == NULL)
     {
-        fprintf(stderr, "\nstrToInt(): Invalid string passed; No conversion occurred\n");
+        fprintf(stderr, "\nstrToInt(): Passed string is NULL; No conversion occurred\n");
         return ERRCODE_NULL_PTR;
     }
 
@@ -256,12 +257,12 @@ int strToInt(const char *str, int *num)
 
     if (STR_SIZE == 0)
     {
-        fprintf(stderr, "\nstrToInt(): Invalid string length: %u; No conversion occurred\n", STR_SIZE);
-        return ERRCODE_DEFAULT;
+        fprintf(stderr, "\nstrToInt(): Invalid string length: 0; No conversion occurred\n");
+        return ERRCODE_BAD_STR; 
     }
     else if (STR_SIZE == 1 && isNegative) // Preemptively handling a single negative dash being passed
     {
-        return ERRCODE_DEFAULT;
+        return ERRCODE_BAD_STR;
     }
 
     // Removing any leading zeros and checking for invalid characters since the passed str should contain
@@ -270,10 +271,10 @@ int strToInt(const char *str, int *num)
     // Otherwise, this would make things like "asd8327" valid, causing 'num' to equal 8327, but things like
     // "8327asd" would cause the function to terminate, leaving 'num' unchanged.
     unsigned short endIndex = isNegative;
-    while ((endIndex < STR_SIZE && str[endIndex] == '0') || !isNumerical(str[endIndex]))
+    while (endIndex < STR_SIZE && (str[endIndex] == '0' || !isNumerical(str[endIndex])))
     {
         if (!isNumerical(str[endIndex]))
-            return ERRCODE_DEFAULT;
+            return ERRCODE_BAD_STR;
         endIndex++;
     }
 
@@ -289,7 +290,7 @@ int strToInt(const char *str, int *num)
     if (STR_SIZE - endIndex > INT_MAX_CHARS)
     {
         fprintf(stderr, "\nstrToInt(): Invalid string length: %u; No conversion occurred\n", STR_SIZE);
-        return ERRCODE_DEFAULT;
+        return ERRCODE_BAD_STR;
     }
 
     // This, assuming no issues arise while parsing the passed string, will replace the value at 'num'
@@ -303,8 +304,8 @@ int strToInt(const char *str, int *num)
     for (; i >= endIndex; i--)
     {
         // This value will only hold a single digit's worth since it calls charToInt(), hence
-        // "unsigned short"
-        const unsigned short currentNum = charToInt(str[i]);
+        // "short", however it could contain a negative value
+        const short currentNum = charToInt(str[i]);
 
         // We can skip over any values of 0
         if (currentNum == '0')
@@ -313,7 +314,7 @@ int strToInt(const char *str, int *num)
             continue;
         }
 
-        if (isNumerical(str[i]))
+        if (currentNum != -1)
         {
 
             // Ensuring no overflow will occur
@@ -347,7 +348,7 @@ int strToInt(const char *str, int *num)
             }
             else
             {
-                return ERRCODE_DEFAULT;
+                return ERRCODE_BAD_STR;
             }
         }
         else // Breaking upon hitting anything non-numeric
