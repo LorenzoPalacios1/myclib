@@ -19,7 +19,7 @@
 
 // The terminator to be used by tests_prompt() to signify the end of the returned
 // int array.
-// Preferably keep this value greater than or less than NUM_TESTS.
+// Preferably keep this value greater or less than NUM_TESTS.
 #define USR_CHOICES_TERMINATOR -1
 
 // Keyword for the user to input in order to select all of the available tests at once.
@@ -51,6 +51,13 @@ int randomint(const int min, const int max)
     return rand() % (max - min + 1) + min;
 }
 
+// Returns either 0 or 1.
+unsigned short randomBool(void)
+{
+
+    return rand() % 2;
+}
+
 // Returns a single visible unsigned char from rand()
 unsigned char random_vis_uchar(void)
 {
@@ -74,7 +81,7 @@ unsigned random_seeder(void)
 {
     if (MANUAL_SEED_SET == 0)
     {
-        const unsigned CUR_SEED = time(NULL) % rand() * (((rand() + 1000) + 1) << 4);
+        const unsigned CUR_SEED = time(NULL) % rand() * ((rand() + 1001) << 4);
         srand(CUR_SEED);
         return CUR_SEED;
     }
@@ -90,7 +97,7 @@ unsigned random_seeder(void)
  */
 
 // Returns a random string of unsigned chars using random_vis_uchar().
-unsigned char *generate_test_ustring(unsigned char min, unsigned char max, const size_t length)
+unsigned char *generate_test_ustring(const unsigned char min, const unsigned char max, const size_t length)
 {
     if (max < min)
     {
@@ -123,7 +130,7 @@ unsigned char *generate_test_ustring(unsigned char min, unsigned char max, const
 }
 
 // Returns a random string of signed chars using random_vis_uchar().
-char *generate_test_string(char min, char max, const size_t length)
+char *generate_test_string(const char min, const char max, const size_t length)
 {
     const clock_t timer = clock();
     if (max < min)
@@ -156,6 +163,7 @@ char *generate_test_string(char min, char max, const size_t length)
     return str;
 }
 
+// Returns a random string of alphabetical chararacters using random_vis_uchar().
 char *generate_test_string_alphabetic(const size_t length)
 {
     if (length == 0)
@@ -174,7 +182,7 @@ char *generate_test_string_alphabetic(const size_t length)
 
     for (unsigned i = 0; i < length; i++)
     {
-        if (rand() % 2)
+        if (randomBool())
         {
             str[i] = random_uchar_range('a', 'z');
         }
@@ -213,7 +221,7 @@ FILE *generate_test_file(const char *filename, const size_t num_chars)
 }
 
 // Returns a pointer to a read-only FILE containing the specified amount of random characters
-// with values between min and max (inclusive).
+// between min and max (inclusive).
 // This function will overwrite any files with the same name.
 FILE *generate_test_file_range(const char *filename, const size_t num_chars, const unsigned char min, const unsigned char max)
 {
@@ -250,6 +258,17 @@ void fDiscardLineTests(void)
 
 void charToIntTests(void)
 {
+    char *rand_string = NULL;
+    for (int i = 0; i < 5; i++)
+    {
+        if (randomBool())
+            rand_string = generate_test_string_alphabetic(randomint(10, 100));
+        else
+            rand_string = generate_test_string(VIS_CHAR_START, VIS_CHAR_END, randomint(10, 100));
+
+        puts(rand_string);
+        free(rand_string);
+    }
 }
 
 // Array of function pointers for easy user access.
@@ -342,17 +361,6 @@ int *tests_prompt(void)
 }
 int main(void)
 {
-
-
-    // MYBASICS FUNCTION TESTING
-    // DELETE AFTER YOU'RE FINISHED
-    int num = -2;
-    strToInt("0000000", &num);
-    printf_s("num = %d", num);
-    return 0;
-
-
-
     clock_t timer = clock();
     puts("\n - MyBasics Testing Suite - \n");
 
@@ -362,6 +370,8 @@ int main(void)
 
     const clock_t user_input_timer = clock();
     const int *user_choices = tests_prompt();
+
+    // We omit the amount of time the user took to input their choices from 'timer'
     timer += clock() - user_input_timer;
 
     if (!user_choices)
