@@ -1,21 +1,10 @@
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <limits.h>
-#include <time.h>
 #include "MyBasics.h"
-
-
-#define ERRCODE_SUCCESS 0     // Code denoting a successful execution.
-#define ERRCODE_DEFAULT 1     // An undefined error code; consult the function's documentation.
-#define ERRCODE_NULL_PTR 2    // General code denoting a bad or NULL primitive pointer argument (eg. char* or int*).
-#define ERRCODE_NULL_FILE 3   // Code denoting a bad or NULL pointer to a FILE argument.
-#define ERRCODE_FILE_AT_EOF 4 // Code denoting that the given FILE is at EOF *before* any reading occurred.
-#define ERRCODE_BAD_STR 5
 
 // Determines the maximum number of characters fDiscardLine() should discard before
 // stopping if it doesn't reach a newline character.
-#define FDISCARDLINE_MAX_READS 2000000
+#define FDISCARDLINE_MAX_READS 50000000
 
 // Determines the number of characters that would be within the string equivalent of INT_MAX.
 #define INT_MAX_CHARS 11
@@ -47,16 +36,18 @@ inline int fDiscardLine(FILE *stream)
 }
 
 /*
- * Writes to the first argument, str, from stream until reading the delimiter character, or upon the
- * string reaching the specified length.
+ * Writes to the first argument, str, from stream until reading the delimiter
+ * character, or upon the string reaching the specified length.
  *
  * A null terminator will replace the delimiter within the string.
  *
- * Otherwise, if applicable and possible, a null terminator will be appended to the end of the string
- * if no delimiter was read or EOF was not met. If this occurs, the returned value will be length + 1.
+ * Otherwise, if applicable and possible, a null terminator will be appended to the
+ * end of the string if no delimiter was read or EOF was not met.
+ *
+ * If this occurs, the returned value will be length + 1.
  *
  * Returns the length of the string INCLUDING the null terminator, or -1 upon an error.
- * 
+ *
  * Returns 0 if stream is at EOF, or if the first character read is the specified delimiter.
  * If this function returns 0 or -1, 'str' WILL BE LEFT UNCHANGED (that is, nothing will be written).
  */
@@ -65,21 +56,21 @@ size_t getStr(char **str, const char delim, const size_t length, FILE *stream)
     // Validating the pointer to the string
     if (str == NULL)
     {
-        fprintf(stderr, "\ngetStr(): Invalid pointer-to-pointer-to-char provided; No reading occurred\n");
+        fputs("\ngetStr(): Invalid pointer-to-pointer-to-char provided; No reading occurred\n", stderr);
         return -1;
     }
 
     // Validating the length argument for the string
-    if (length <= 0)
+    if (length == 0)
     {
-        fprintf(stderr, "\ngetStr(): Invalid string length: %lld; No reading occurred\n", length);
-        return -1;
+        fprintf(stderr, "\ngetStr(): Invalid string length (%lld); No reading occurred\n", length);
+        return 0;
     }
 
     // Validating that the input stream is, well, valid
     if (stream == NULL)
     {
-        fprintf(stderr, "\ngetStr(): Invalid stream provided; No reading occurred\n");
+        fputs("\ngetStr(): Invalid stream provided; No reading occurred\n", stderr);
         return -1;
     }
 
@@ -107,17 +98,13 @@ size_t getStr(char **str, const char delim, const size_t length, FILE *stream)
     // If nothing was read, we can just return 0, leaving the 'str' argument untouched
     // This will usually occur if only the specified delimiter character was read from the 'stream'
     // which gets replaced by the null terminator
-    if (buffer[0] == '\0')
-    {
+    if (i == 0)
         return 0;
-    }
 
     // Appending a null terminator and adding it to the string's returned length, 'i', if not all of
     // the input within 'stream' was read
     if (i == length)
-    {
         buffer[i++] = '\0';
-    }
 
     // Allocating memory for 'str' if the user hadn't already allocated for it themselves
     if (*str == NULL)
@@ -126,7 +113,7 @@ size_t getStr(char **str, const char delim, const size_t length, FILE *stream)
         // Allocation failure insurance
         if (*str == NULL)
         {
-            fprintf(stderr, "\ngetStr(): malloc() failure; No reading occurred\n");
+            fputs("\ngetStr(): malloc() failure; No reading occurred\n", stderr);
             return -1;
         }
     }
@@ -136,17 +123,18 @@ size_t getStr(char **str, const char delim, const size_t length, FILE *stream)
 }
 
 /*
- * Writes to the first argument, str, from stdin until reading a newline character, or upon the
- * string reaching the specified length.
+ * Writes to the first argument, str, from stdin until reading a newline character,
+ * or upon the string reaching the specified length.
  *
- * The difference between getStr() and this function is that this function has an implicit delimiter,
- * '\\n', an implicit stream, 'stdin', and will automatically flush any unused input from stdin.
+ * The difference between getStr() and this function is that this function has an
+ * implicit delimiter, '\\n', an implicit stream, 'stdin', and will automatically flush
+ * any unused input from stdin.
  *
  * A null terminator will replace the newline within the string.
  *
- * Otherwise, if the input exceeds the passed length, a null terminator will be APPENDED to the
- * end of the string if no newline was read or EOF was not met. If this occurs, the returned value
- * will be length + 1.
+ * Otherwise, if the input exceeds the passed length, a null terminator will be
+ * APPENDED to the end of the string if no newline was read or EOF was not met.
+ * If this occurs, the returned value will be length + 1.
  *
  * Returns the length of the string INCLUDING the null terminator, or -1 upon an error.
  * Returns 0 if the first character read is a newline character.
@@ -173,19 +161,16 @@ int indexOf(const char *str, const char letter, const size_t offset)
     // Ensuring offset is valid
     if (offset > LENGTH_OF_STR || offset < 0)
     {
-        fprintf(stderr, "\nindexOf(): Invalid offset for passed string: %llu; No reading occurred\n", offset);
+        fprintf(stderr, "\nindexOf(): Invalid offset (%llu) for passed string; No reading occurred\n", offset);
         return -1;
     }
 
     // Searching through the string for the character
-    //
     char currentChar;
     for (size_t i = offset; i < LENGTH_OF_STR && (currentChar = str[i]) != '\0'; i++)
     {
         if (currentChar == letter)
-        {
             return i;
-        }
     }
     return -1;
 }
@@ -210,8 +195,8 @@ inline int isNumerical(const char number)
 }
 
 /*
- * Returns non-zero, true, if the passed char represents either a number or
- * alphabetical letter.
+ * Returns non-zero, true, if the passed char represents either a number
+ * or alphabetical letter.
  *
  * Returns 0, false, otherwise.
  */
@@ -235,15 +220,15 @@ inline short int charToInt(const char num)
 /*
  * Parses the passed string into an int which will be written to the second argument, 'num'.
  *
- * If this function fails, such as via invalid characters or overflow, 'num' will be left unchanged
- * and an error code returned.
+ * If this function fails, such as via invalid characters or overflow, 'num' will be left
+ * unchanged and ERRCODE_DEFAULT will be returned.
  */
 int strToInt(const char *str, int *num)
 {
     // Validating the string's existence
     if (str == NULL)
     {
-        fprintf(stderr, "\nstrToInt(): Passed string is NULL; No conversion occurred\n");
+        fputs("\nstrToInt(): Passed string is NULL; No conversion occurred", stderr);
         return ERRCODE_NULL_PTR;
     }
 
@@ -255,15 +240,12 @@ int strToInt(const char *str, int *num)
     // Also used as a boolean to convert the resultant int to a negative if applicable
     const unsigned short isNegative = (*str == '-');
 
-    if (STR_SIZE == 0)
-    {
-        fprintf(stderr, "\nstrToInt(): Invalid string length: 0; No conversion occurred\n");
-        return ERRCODE_BAD_STR; 
-    }
-    else if (STR_SIZE == 1 && isNegative) // Preemptively handling a single negative dash being passed
+    // Preemptively handling a 0-length string or a single negative dash
+    if (STR_SIZE == 0 || (STR_SIZE == 1 && isNegative))
     {
         return ERRCODE_BAD_STR;
     }
+
 
     // Removing any leading zeros and checking for invalid characters since the passed str should contain
     // only numerical characters, and any leading non-numerical characters would simply be ignored rather
@@ -278,7 +260,7 @@ int strToInt(const char *str, int *num)
         endIndex++;
     }
 
-    // If, for whatever reason, "-0000" or similar is the passed string, we handle that below since the
+    // If, for whatever reason, "-0000" or similar is the passed string, we handle that here since the
     // above loop would normally discard it
     if (endIndex == STR_SIZE && str[endIndex - 1] == '0')
     {
@@ -289,7 +271,7 @@ int strToInt(const char *str, int *num)
     // Checking to ensure that the string isn't long enough to definitively overflow int
     if (STR_SIZE - endIndex > INT_MAX_CHARS)
     {
-        fprintf(stderr, "\nstrToInt(): Invalid string length: %u; No conversion occurred\n", STR_SIZE);
+        fprintf(stderr, "\nstrToInt(): String too large (%u); No conversion occurred\n", STR_SIZE);
         return ERRCODE_BAD_STR;
     }
 
@@ -303,11 +285,11 @@ int strToInt(const char *str, int *num)
     short i = STR_SIZE - 1;
     for (; i >= endIndex; i--)
     {
-        // This value will only hold a single digit's worth since it calls charToInt(), hence
-        // "short", however it could contain a negative value
+        // This value will only hold a single digit's worth since it calls charToInt(), hence the
+        // usage of 'short', however it could contain a negative value
         const short currentNum = charToInt(str[i]);
 
-        // We can skip over any values of 0
+        // We can skip any values of 0
         if (currentNum == '0')
         {
             placeValue *= 10;
@@ -316,9 +298,8 @@ int strToInt(const char *str, int *num)
 
         if (currentNum != -1)
         {
-
             // Ensuring no overflow will occur
-            if (tempNum - 147483647 <= 0 && placeValue != INT_MAX_PLACEVALUE)
+            if (tempNum - INT_OVERFLOW_CHK <= 0 && placeValue != INT_MAX_PLACEVALUE)
             {
                 tempNum += currentNum * placeValue;
                 placeValue *= 10;
@@ -343,7 +324,7 @@ int strToInt(const char *str, int *num)
                     *num = INT_MIN;
                     return ERRCODE_SUCCESS;
                 }
-                // Catching overflow
+                // Catching overflow with an undefined return error code
                 return ERRCODE_DEFAULT;
             }
             else
@@ -351,14 +332,14 @@ int strToInt(const char *str, int *num)
                 return ERRCODE_BAD_STR;
             }
         }
-        else // Breaking upon hitting anything non-numeric
+        else // Break upon hitting anything non-numeric
         {
             break;
         }
     }
 
-    // If 'i' is still its initialized value, that means the loop had hit an invalid character, so
-    // we leave 'num' alone and return an error code
+    // If 'i' is still in its initialized value then the loop must have hit an invalid character
+    // immediately, so we leave 'num' alone as per the function's guarantee and return an error code
     if (i == STR_SIZE - 1)
         return ERRCODE_DEFAULT;
 
@@ -371,35 +352,36 @@ int strToInt(const char *str, int *num)
 }
 
 /*
- * Reads up to 11 numerical characters (including a preceding dash) and parses them, writing the proper int equivalent
- * (if any) to 'num'.
+ * Reads up to 11 numerical characters (including a preceding dash) and parses
+ * them, writing the proper int equivalent (if any) to 'num'.
+ *
  * Stops upon reading a non-numerical character
  *
  * Writes the parsed line as an int to 'num'.
  *
- * Returns 1 if the passed arguments were valid, but no characters in the stream were parsable,
- * or if type int was overflowed.
+ * Returns 1 if the passed arguments were valid, but no characters in the stream
+ * were parsable, or if type int was overflowed.
  */
 int readInt(int *num, FILE *stream)
 {
     // 'num' pointer validation
     if (num == NULL)
     {
-        fprintf(stderr, "\nreadInt(): Passed int pointer is NULL; No reading occurred\n");
+        fputs("\nreadInt(): Passed int pointer is NULL; No reading occurred", stderr);
         return ERRCODE_NULL_PTR;
     }
 
     // 'stream' validation
     if (stream == NULL)
     {
-        fprintf(stderr, "\nreadInt(): Passed file is NULL; No reading occurred\n");
+        fputs("\nreadInt(): Passed file is NULL; No reading occurred", stderr);
         return ERRCODE_NULL_FILE;
     }
 
     // Preliminary check to ensure 'stream' isn't already at EOF
     if (feof(stream))
     {
-        fprintf(stderr, "\nreadInt(): Passed file is already at EOF; No reading occurred\n");
+        fputs("\nreadInt(): Passed file is already at EOF; No reading occurred", stderr);
         return ERRCODE_FILE_AT_EOF;
     }
 
@@ -411,13 +393,13 @@ int readInt(int *num, FILE *stream)
 
     int i = -1;
     // Handling the trailing dash if present
-    if ((buffer[0] = getc(stdin)) == '-')
+    if ((buffer[0] = getc(stream)) == '-')
     {
         ++i; // We count the dash as a valid character, so we increment 'i' just as we would for a digit
     }
     else // Restore the character otherwise since it could be a valid digit
     {
-        ungetc(buffer[0], stdin);
+        ungetc(buffer[0], stream);
     }
 
     while (i < INT_MAX_CHARS && isNumerical((buffer[++i] = getc(stream))))

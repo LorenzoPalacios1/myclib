@@ -41,27 +41,26 @@
 
 // Returns a single int from rand() within the specified range (inclusive).
 // Always returns 0 if (max < min)
-int randomint(const int min, const int max)
+int random_int(const int min, const int max)
 {
     if (max < min)
     {
-        fprintf_s(stderr, "randomint(): Invalid values for max and min values (%u is NOT GREATER THAN %u)\n", max, min);
+        fprintf_s(stderr, "random_int(): Invalid values for max and min values (%u is NOT GREATER THAN %u)\n", max, min);
         return 0;
     }
     return rand() % (max - min + 1) + min;
 }
 
 // Returns either 0 or 1.
-unsigned short randomBool(void)
+unsigned char random_bool(void)
 {
-
     return rand() % 2;
 }
 
 // Returns a single visible unsigned char from rand()
 unsigned char random_vis_uchar(void)
 {
-    return randomint(UCHAR_MAX, VIS_CHAR_START);
+    return random_int(UCHAR_MAX, VIS_CHAR_START);
 }
 
 // Returns a single unsigned char from rand() within the min and max values (inclusive)
@@ -72,7 +71,7 @@ unsigned char random_uchar_range(const unsigned char min, const unsigned char ma
         fprintf_s(stderr, "random_uchar_range(): Invalid values for max and min values (%u is NOT GREATER THAN %u)\n", max, min);
         return 0;
     }
-    return randomint(min, max);
+    return random_int(min, max);
 }
 
 // Generates a new seed for rand()
@@ -81,7 +80,7 @@ unsigned random_seeder(void)
 {
     if (MANUAL_SEED_SET == 0)
     {
-        const unsigned CUR_SEED = time(NULL) % rand() * ((rand() + 1001) << 4);
+        const unsigned CUR_SEED = time(NULL) << 4;
         srand(CUR_SEED);
         return CUR_SEED;
     }
@@ -120,10 +119,10 @@ unsigned char *generate_test_ustring(const unsigned char min, const unsigned cha
         return NULL;
     }
 
-    for (unsigned i = 0; i < length; i++)
-    {
+    // Writing the string
+    for (size_t i = 0; i < length; i++)
         str[i] = random_uchar_range(min, max);
-    }
+    
     str[length] = '\0';
 
     return str;
@@ -153,10 +152,10 @@ char *generate_test_string(const char min, const char max, const size_t length)
         return NULL;
     }
 
-    for (unsigned i = 0; i < length; i++)
-    {
+    // Writing the string
+    for (size_t i = 0; i < length; i++)
         str[i] = random_uchar_range(min, max);
-    }
+    
     str[length] = '\0';
     printf_s("%ldms\n", clock() - timer);
 
@@ -180,16 +179,12 @@ char *generate_test_string_alphabetic(const size_t length)
         return NULL;
     }
 
-    for (unsigned i = 0; i < length; i++)
+    for (size_t i = 0; i < length; i++)
     {
-        if (randomBool())
-        {
+        if (random_bool())
             str[i] = random_uchar_range('a', 'z');
-        }
         else
-        {
             str[i] = random_uchar_range('A', 'Z');
-        }
     }
     str[length] = '\0';
 
@@ -261,10 +256,11 @@ void charToIntTests(void)
     char *rand_string = NULL;
     for (int i = 0; i < 5; i++)
     {
-        if (randomBool())
-            rand_string = generate_test_string_alphabetic(randomint(10, 100));
+        // String generation
+        if (random_bool())
+            rand_string = generate_test_string_alphabetic(random_int(10, 100));
         else
-            rand_string = generate_test_string(VIS_CHAR_START, VIS_CHAR_END, randomint(10, 100));
+            rand_string = generate_test_string(VIS_CHAR_START, VIS_CHAR_END, random_int(10, 100));
 
         puts(rand_string);
         free(rand_string);
@@ -278,14 +274,13 @@ static void (*const tests[])(void) = {charToIntTests, fDiscardLineTests};
 static const char *test_names[] = {"charToIntTests", "fDiscardLineTests"};
 
 // Gives the user a generic prompt allowing them to choose from a list of available tests.
-// Returns an array of ints that correspond to the tests they have chosen terminated by USR_CHOICES_TERMINATOR
+// Returns an array of ints that correspond to the tests have been chosen, terminated by USR_CHOICES_TERMINATOR.
 int *tests_prompt(void)
 {
     puts("Your test choices are:");
     for (int i = 0; i < NUM_TESTS; i++)
-    {
         printf_s("%d. %s\n", i, test_names[i]);
-    }
+    
     printf_s("\nEnter the test number(s) you want to run, or \"%s\" (case insensitive) to run all of the tests.\n", RUN_ALL_TESTS_KEYWORD);
     puts("Press the enter/return key to start running the selected tests.");
 
@@ -346,16 +341,13 @@ int *tests_prompt(void)
             i--;
         }
     }
+    free(input);
 
     // Appending the necessary terminator to the array 'choices'
     if (i != NUM_TESTS)
-    {
         choices[i] = USR_CHOICES_TERMINATOR;
-    }
     else
-    {
         choices[NUM_TESTS] = USR_CHOICES_TERMINATOR;
-    }
 
     return choices;
 }
@@ -389,5 +381,8 @@ int main(void)
             break;
     }
     printf("Overall time taken: %ldms", clock() - timer);
+
+    free(user_choices);
+
     return ERRCODE_SUCCESS;
 }
