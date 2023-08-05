@@ -46,10 +46,10 @@ inline int fDiscardLine(FILE *stream)
  *
  * If this occurs, the returned value will be length + 1.
  *
- * Returns the length of the string INCLUDING the null terminator, or -1 upon an error.
+ * Returns the length of the string INCLUDING the null terminator, or 0 if nothing was written.
  *
  * Returns 0 if stream is at EOF, or if the first character read is the specified delimiter.
- * If this function returns 0 or -1, 'str' WILL BE LEFT UNCHANGED (that is, nothing will be written).
+ * If this function returns 0, 'str' WILL BE LEFT UNCHANGED (that is, nothing will be written).
  */
 size_t getStr(char **str, const char delim, const size_t length, FILE *stream)
 {
@@ -57,13 +57,13 @@ size_t getStr(char **str, const char delim, const size_t length, FILE *stream)
     if (str == NULL)
     {
         fputs("\ngetStr(): Invalid pointer-to-pointer-to-char provided; No reading occurred\n", stderr);
-        return -1;
+        return 0;
     }
 
     // Validating the length argument for the string
     if (length == 0)
     {
-        fprintf(stderr, "\ngetStr(): Invalid string length (%lld); No reading occurred\n", length);
+        fprintf(stderr, "\ngetStr(): Invalid string length (%llu); No reading occurred\n", length);
         return 0;
     }
 
@@ -71,12 +71,11 @@ size_t getStr(char **str, const char delim, const size_t length, FILE *stream)
     if (stream == NULL)
     {
         fputs("\ngetStr(): Invalid stream provided; No reading occurred\n", stderr);
-        return -1;
+        return 0;
     }
 
-    // Ensuring stream isn't at EOF here so that we don't go through all the other stuff below.
-    // We just return 0 since there aren't any actual problems with the arguments; it's just that
-    // the stream provided is at EOF, and having a separate return code for this could be useful.
+    // Ensuring stream isn't at EOF here so that we don't go through all the other stuff below
+    // just to return 0 anyway
     if (feof(stream))
         return 0;
 
@@ -95,10 +94,10 @@ size_t getStr(char **str, const char delim, const size_t length, FILE *stream)
         }
     }
 
-    // If nothing was read, we can just return 0, leaving the 'str' argument untouched
+    // If nothing meaningful was read then we can just return 0, leaving the 'str' argument untouched.
     // This will usually occur if only the specified delimiter character was read from the 'stream'
-    // which gets replaced by the null terminator
-    if (i == 0)
+    // which gets replaced by the null terminator.
+    if (buffer[0] == '\0')
         return 0;
 
     // Appending a null terminator and adding it to the string's returned length, 'i', if not all of
@@ -114,7 +113,7 @@ size_t getStr(char **str, const char delim, const size_t length, FILE *stream)
         if (*str == NULL)
         {
             fputs("\ngetStr(): malloc() failure; No reading occurred\n", stderr);
-            return -1;
+            return 0;
         }
     }
     strcpy_s(*str, sizeof(char) * i, buffer);
@@ -123,23 +122,16 @@ size_t getStr(char **str, const char delim, const size_t length, FILE *stream)
 }
 
 /*
- * Writes to the first argument, str, from stdin until reading a newline character,
+ * Writes to the first argument, 'str', from stdin until reading a newline character,
  * or upon the string reaching the specified length.
  *
  * The difference between getStr() and this function is that this function has an
  * implicit delimiter, '\\n', an implicit stream, 'stdin', and will automatically flush
  * any unused input from stdin.
  *
- * A null terminator will replace the newline within the string.
- *
- * Otherwise, if the input exceeds the passed length, a null terminator will be
- * APPENDED to the end of the string if no newline was read or EOF was not met.
- * If this occurs, the returned value will be length + 1.
- *
- * Returns the length of the string INCLUDING the null terminator, or -1 upon an error.
- * Returns 0 if the first character read is a newline character.
+ * This function has the same semantics as getStr() aside from the flushing of stdin.
  */
-inline int getStrStdin(char **str, const size_t length)
+inline size_t getStrStdin(char **str, const size_t length)
 {
     const size_t numChars = getStr(str, '\n', length, stdin);
     // If 'numChars' is greater than the passed length, that means getStr() appended a null terminator
@@ -159,17 +151,16 @@ int indexOf(const char *str, const char letter, const size_t offset)
 {
     const size_t LENGTH_OF_STR = strlen(str);
     // Ensuring offset is valid
-    if (offset > LENGTH_OF_STR || offset < 0)
+    if (offset > LENGTH_OF_STR)
     {
         fprintf(stderr, "\nindexOf(): Invalid offset (%llu) for passed string; No reading occurred\n", offset);
         return -1;
     }
 
     // Searching through the string for the character
-    char currentChar;
-    for (size_t i = offset; i < LENGTH_OF_STR && (currentChar = str[i]) != '\0'; i++)
+    for (size_t i = offset; i < LENGTH_OF_STR && str[i] != '\0'; i++)
     {
-        if (currentChar == letter)
+        if (str[i] == letter)
             return i;
     }
     return -1;
@@ -210,7 +201,7 @@ inline int isAlphaNumerical(const char item)
  *
  * If the passed character does not represent an integer, this function returns -1.
  */
-inline short int charToInt(const char num)
+inline short charToInt(const char num)
 {
     if (isNumerical(num))
         return num - '0';
@@ -242,9 +233,7 @@ int strToInt(const char *str, int *num)
 
     // Preemptively handling a 0-length string or a single negative dash
     if (STR_SIZE == 0 || (STR_SIZE == 1 && isNegative))
-    {
         return ERRCODE_BAD_STR;
-    }
 
 
     // Removing any leading zeros and checking for invalid characters since the passed str should contain

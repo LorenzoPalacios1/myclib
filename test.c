@@ -13,6 +13,9 @@
 // (MAKE SURE TO INCREMENT THIS WHEN ADDING A NEW TEST FUNCTION)
 #define NUM_TESTS 2
 
+// The number of passes each test function should run.
+#define DEFAULT_NUM_PASSES 5
+
 // The maximum number of characters to be read by getStrStdin() when prompting the user
 // for their test choices.
 #define MAX_INPUT_PER_LINE 10
@@ -131,7 +134,6 @@ unsigned char *generate_test_ustring(const unsigned char min, const unsigned cha
 // Returns a random string of signed chars using random_vis_uchar().
 char *generate_test_string(const char min, const char max, const size_t length)
 {
-    const clock_t timer = clock();
     if (max < min)
     {
         fprintf_s(stderr, "generate_test_ustring(): Invalid values for max and min values (%u is NOT GREATER THAN %u)\n", max, min);
@@ -157,7 +159,6 @@ char *generate_test_string(const char min, const char max, const size_t length)
         str[i] = random_uchar_range(min, max);
     
     str[length] = '\0';
-    printf_s("%ldms\n", clock() - timer);
 
     return str;
 }
@@ -300,6 +301,8 @@ int *tests_prompt(void)
         // - NEWLINE CHECK -
 
         // We exit upon reading a single newline which can be detected if getStrStdin() returns 0
+        // because getStr() will disregard input that consists only of the specified delimiter 
+        // character, hence making the returned string length '0' (albeit while leaving the string NULL)
         if (getStrStdin(&input, MAX_INPUT_PER_LINE) == 0)
         {
             // Returning NULL if the user enters a single newline as their first "choice" since
@@ -351,6 +354,7 @@ int *tests_prompt(void)
 
     return choices;
 }
+
 int main(void)
 {
     clock_t timer = clock();
@@ -366,7 +370,7 @@ int main(void)
     // We omit the amount of time the user took to input their choices from 'timer'
     timer += clock() - user_input_timer;
 
-    if (!user_choices)
+    if (user_choices == NULL)
         return ERRCODE_NULL_PTR;
 
     // Now we run the tests
@@ -381,8 +385,6 @@ int main(void)
             break;
     }
     printf("Overall time taken: %ldms", clock() - timer);
-
-    free(user_choices);
 
     return ERRCODE_SUCCESS;
 }
