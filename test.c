@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 #include <time.h>
 
 #include "MyBasics.h"
@@ -8,10 +9,6 @@
 // Set to non-zero to tell the program to use the specified seed.
 // Otherwise, set to zero to let the program generate a seed.
 #define MANUAL_SEED_SET 0
-
-// The total number of tests available.
-// (MAKE SURE TO INCREMENT THIS WHEN ADDING A NEW TEST FUNCTION)
-#define NUM_TESTS 2
 
 // The number of passes each test function should run.
 #define DEFAULT_NUM_PASSES 5
@@ -30,9 +27,9 @@
 #define RUN_ALL_TESTS_KEYWORD "ALL"
 
 // The minimum signed char value for a visible character (inclusive).
-#define VIS_CHAR_START ' ' + 1
+#define VIS_CHAR_START (' ' + 1)
 // The maximum signed char value for a visible character (inclusive).
-#define VIS_CHAR_END '' - 1
+#define VIS_CHAR_END ('' - 1)
 
 /*
  * - Utility Functions -
@@ -44,7 +41,7 @@
 
 // Returns a single int from rand() within the specified range (inclusive).
 // Always returns 0 if (max < min)
-int random_int(const int min, const int max)
+inline int random_int(const int min, const int max)
 {
     if (max < min)
     {
@@ -55,19 +52,25 @@ int random_int(const int min, const int max)
 }
 
 // Returns either 0 or 1.
-unsigned char random_bool(void)
+inline unsigned char random_bool(void)
 {
     return rand() % 2;
 }
 
 // Returns a single visible unsigned char from rand()
-unsigned char random_vis_uchar(void)
+inline unsigned char random_vis_uchar(void)
 {
-    return random_int(UCHAR_MAX, VIS_CHAR_START);
+    return random_int(VIS_CHAR_START, UCHAR_MAX);
+}
+
+// Returns a single visible unsigned char from rand()
+inline unsigned char random_vis_char(void)
+{
+    return random_int(VIS_CHAR_START, CHAR_MAX);
 }
 
 // Returns a single unsigned char from rand() within the min and max values (inclusive)
-unsigned char random_uchar_range(const unsigned char min, const unsigned char max)
+inline unsigned char random_uchar_range(const unsigned char min, const unsigned char max)
 {
     if (max < min)
     {
@@ -104,13 +107,13 @@ unsigned char *generate_test_ustring(const unsigned char min, const unsigned cha
     if (max < min)
     {
         fprintf_s(stderr, "generate_test_ustring(): Invalid values for max and min values (%u is NOT GREATER THAN %u)\n", max, min);
-        return 0;
+        return NULL;
     }
 
     if (length == 0)
     {
         fprintf_s(stderr, "generate_test_ustring(): Invalid length: %llu", length);
-        return 0;
+        return NULL;
     }
 
     // (length + 1) to account for the null terminator
@@ -137,13 +140,13 @@ char *generate_test_string(const char min, const char max, const size_t length)
     if (max < min)
     {
         fprintf_s(stderr, "generate_test_ustring(): Invalid values for max and min values (%u is NOT GREATER THAN %u)\n", max, min);
-        return 0;
+        return NULL;
     }
 
     if (length == 0)
     {
         fprintf_s(stderr, "generate_test_ustring(): Invalid length: %llu", length);
-        return 0;
+        return NULL;
     }
 
     // (length + 1) to account for the null terminator
@@ -248,31 +251,36 @@ FILE *generate_test_file_range(const char *filename, const size_t num_chars, con
  * - Test Functions -
  */
 
-void fDiscardLineTests(void)
+static void fDiscardLineTests(void)
 {
 }
 
-void charToIntTests(void)
+static void charToIntTests(void)
 {
-    char *rand_string = NULL;
-    for (int i = 0; i < 5; i++)
-    {
-        // String generation
-        if (random_bool())
-            rand_string = generate_test_string_alphabetic(random_int(10, 100));
-        else
-            rand_string = generate_test_string(VIS_CHAR_START, VIS_CHAR_END, random_int(10, 100));
+    char *rand_strings[DEFAULT_NUM_PASSES];
 
-        puts(rand_string);
-        free(rand_string);
+    // Generating the random strings and printing them to the user
+    puts("Random test input (separated by lines):");
+    for (int i = 0; i < DEFAULT_NUM_PASSES; i++)
+    {
+        rand_strings[i] = generate_test_string(VIS_CHAR_START, VIS_CHAR_END, random_int(10, 30));
+        puts(rand_strings[i]);
+    }
+
+    for (int i = 0; i < DEFAULT_NUM_PASSES; i++)
+    {
+        
     }
 }
 
-// Array of function pointers for easy user access.
+// Array of function pointers for easy access.
 // Will have to be manually updated, however this shouldn't be too difficult to keep up with.
 // Make sure to update 'NUM_TESTS' and 'test_names' accordingly.
 static void (*const tests[])(void) = {charToIntTests, fDiscardLineTests};
 static const char *test_names[] = {"charToIntTests", "fDiscardLineTests"};
+
+// The total number of tests available.
+#define NUM_TESTS 2
 
 // Gives the user a generic prompt allowing them to choose from a list of available tests.
 // Returns an array of ints that correspond to the tests have been chosen, terminated by USR_CHOICES_TERMINATOR.
@@ -285,15 +293,19 @@ int *tests_prompt(void)
     printf_s("\nEnter the test number(s) you want to run, or \"%s\" (case insensitive) to run all of the tests.\n", RUN_ALL_TESTS_KEYWORD);
     puts("Press the enter/return key to start running the selected tests.");
 
-    // This array will hold the indexes of the tests the user selects, but will use the value defined by USR_CHOICES_TERMINATOR
+    // This array will hold the indexes of the tests the user selects, and will use the value defined by USR_CHOICES_TERMINATOR
     // to define the end of the array, hence "(NUM_TESTS + 1)"
     int *choices = malloc(sizeof(int) * (NUM_TESTS + 1));
     if (choices == NULL)
     {
-        fprintf_s(stderr, "tests_prompt(): malloc() failure");
+        fputs("\ntests_prompt(): malloc() failure", stderr);
         return NULL;
     }
 
+    // Declaring the string outside of the loop means that it only has to be freed once.
+    // This is fine because getStr() would be allocating the same amount of memory over and over,
+    // and since getStr() will assume a non-null pointer points to already allocated memory and since
+    // the length of the string is capped out at MAX_INPUT_PER_LINE
     char *input = NULL;
     int i = 0;
     for (; i < NUM_TESTS; i++)
@@ -357,7 +369,7 @@ int *tests_prompt(void)
 
 int main(void)
 {
-    clock_t timer = clock();
+    clock_t global_timer = clock();
     puts("\n - MyBasics Testing Suite - \n");
 
     // Ensuring that the seed for this test run is shown to the user so that ample information
@@ -367,8 +379,8 @@ int main(void)
     const clock_t user_input_timer = clock();
     const int *user_choices = tests_prompt();
 
-    // We omit the amount of time the user took to input their choices from 'timer'
-    timer += clock() - user_input_timer;
+    // We omit the amount of time the user took to input their choices from 'global_timer'
+    global_timer += clock() - user_input_timer;
 
     if (user_choices == NULL)
         return ERRCODE_NULL_PTR;
@@ -378,13 +390,15 @@ int main(void)
     {
         if (user_choices[i] != USR_CHOICES_TERMINATOR)
         {
-            printf_s("Now running %d - %s\n", user_choices[i], test_names[user_choices[i]]);
+            printf_s("\nNow running %d - %s\n", user_choices[i], test_names[user_choices[i]]);
+            const clock_t test_timer = clock();
             tests[user_choices[i]]();
+            printf_s("\nFinished running %d - %s\nElapsed time: %ldms\n", user_choices[i], test_names[user_choices[i]], clock() - test_timer);
         }
         else
             break;
     }
-    printf("Overall time taken: %ldms", clock() - timer);
+    printf_s("\nTotal elapsed time: %ldms", clock() - global_timer);
 
     return ERRCODE_SUCCESS;
 }
