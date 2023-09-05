@@ -108,7 +108,7 @@ size_t getStr(char **str, const char delim, const size_t length, FILE *stream)
     // Allocating memory for 'str' if the user hadn't already allocated for it themselves
     if (*str == NULL)
     {
-        *str = malloc(sizeof(char) * i);
+        *str = malloc(sizeof(buffer));
         // Allocation failure insurance
         if (*str == NULL)
         {
@@ -116,7 +116,7 @@ size_t getStr(char **str, const char delim, const size_t length, FILE *stream)
             return 0;
         }
     }
-    strcpy_s(*str, sizeof(char) * i, buffer);
+    strcpy_s(*str, sizeof(buffer), buffer);
 
     return i;
 }
