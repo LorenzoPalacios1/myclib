@@ -43,8 +43,8 @@ inline int fDiscardLine(FILE *stream)
  *
  * \note If this function returns 0, the string will be left unmodified (that is, nothing will be written).
  *
- * \note A null terminator will replace the delimiter within the string. 
- * 
+ * \note A null terminator will replace the delimiter within the string.
+ *
  * \note Otherwise, if 'length' characters were written before the delimiter was read, a null terminator will be appended to the
  * end of the string if no delimiter was read or EOF was not met.
  *
@@ -225,7 +225,7 @@ inline int isAlphaNumerical(const char item)
  *
  * If the passed character does not represent an integer, this function returns -1.
  */
-inline short charToInt(const char num)
+inline int charToInt(const char num)
 {
     if (isNumerical(num))
         return num - '0';
@@ -238,7 +238,7 @@ inline short charToInt(const char num)
  * If this function fails, such as via invalid characters or overflow, 'num' will be left
  * unchanged and ERRCODE_GENERAL will be returned.
  */
-int strToInt(const char *const str, int *const num)
+int strToInt(const char *str, int *const num)
 {
     // Validating the string's existence
     if (str == NULL)
@@ -247,44 +247,46 @@ int strToInt(const char *const str, int *const num)
         return ERRCODE_BAD_PTR;
     }
 
-    const size_t STR_SIZE = strlen(str);
-
-    // The expression below checks if there is a leading dash sign within the string which tells the
-    // later parsing loop to ignore this character
-    // Also used as a boolean to convert the resultant int to a negative if applicable
-    const unsigned short isNegative = (*str == '-');
-
-    // Preemptively handling a 0-length string or a single negative dash
-    if (STR_SIZE == 0 || (STR_SIZE == 1 && isNegative))
-        return ERRCODE_BAD_INPUT;
-
-
-    // Removing any leading zeros and checking for invalid characters since the passed str should contain
-    // only numerical characters, and any leading non-numerical characters would simply be ignored rather
-    // than stopping function flow.
-    // Otherwise, this would make things like "asd8327" valid, causing 'num' to equal 8327, but things like
-    // "8327asd" would cause the function to terminate, leaving 'num' unchanged.
-    unsigned short endIndex = isNegative;
-    while (endIndex < STR_SIZE && (str[endIndex] == '0' || !isNumerical(str[endIndex])))
+    // If there is a leading dash sign within the string then the later parsing loop will know
+    // to ignore this character
+    const char isNegative = (*str == '-');
+    const char *const STR_PTR_START = str;
+    const char *const STR_PTR_OFFSET = NULL;
+    const char *const STR_PTR_END = STR_PTR_START + strlen(str);
     {
-        if (!isNumerical(str[endIndex]))
+        const size_t STR_SIZE = STR_PTR_END - STR_PTR_START;
+
+        // Preemptively handling a 0-length string or a single negative dash
+        if (STR_SIZE == 0 || (STR_SIZE == 1 && isNegative))
             return ERRCODE_BAD_INPUT;
-        endIndex++;
-    }
 
-    // If, for whatever reason, "-0000" or similar is the passed string, we handle that here since the
-    // above loop would normally discard it
-    if (endIndex == STR_SIZE && str[endIndex - 1] == '0')
-    {
-        *num = 0;
-        return ERRCODE_SUCCESS;
-    }
+        // Removing any leading zeros and checking for invalid characters since the passed str should contain
+        // only numerical characters, and any leading non-numerical characters would simply be ignored rather
+        // than stopping function flow.
+        // Otherwise, this would make things like "asd8327" valid, causing 'num' to equal 8327, but things like
+        // "8327asd" would cause the function to terminate (as it should), leaving 'num' unchanged.
+        while (str < STR_PTR_END && (*str == '0' || !isNumerical(*str)))
+        {
+            if (!isNumerical(*str))
+                return ERRCODE_BAD_INPUT;
+            str++;
+        }
 
-    // Checking to ensure that the string isn't long enough to definitively overflow int
-    if (STR_SIZE - endIndex > INT_MAX_CHARS)
-    {
-        fprintf(stderr, "\nstrToInt(): String too large (%u); No conversion occurred\n", STR_SIZE);
-        return ERRCODE_BAD_INPUT;
+        // If a string of only zeros or similar is the passed string, we handle that here since it is technically
+        // valid, but the above loop would set str to STR_PTR_END and the later parsing loop won't run, which would
+        // then cause *num to be unchanged since the checks afterward would assume the input string was invalid.
+        if (str == STR_PTR_END && *str - 1 == '0')
+        {
+            *num = 0;
+            return ERRCODE_SUCCESS;
+        }
+
+        // Ensuring that the string isn't long enough to definitively overflow int
+        if (STR_PTR_END - str > INT_MAX_CHARS)
+        {
+            fprintf(stderr, "\nstrToInt(): String too large (%u); No conversion occurred\n", STR_SIZE);
+            return ERRCODE_BAD_INPUT;
+        }
     }
 
     // This, assuming no issues arise while parsing the passed string, will replace the value at 'num'
@@ -294,12 +296,11 @@ int strToInt(const char *const str, int *const num)
     // Iterating over 'str' in reverse so we can assign the correct place values with as little hassle
     // as possible.
     // "STR_SIZE - 1" to skip the null terminator
-    short i = STR_SIZE - 1;
-    for (; i >= endIndex; i--)
+    while (str != STR_PTR_END)
     {
         // This value will only hold a single digit's worth since it calls charToInt(), hence the
-        // usage of 'short', however it could contain a negative value
-        const short currentNum = charToInt(str[i]);
+        // usage of 'char', however it could contain a negative value
+        const char currentNum = charToInt(*str++);
 
         // We can skip any values of 0
         if (currentNum == '0')
@@ -352,10 +353,9 @@ int strToInt(const char *const str, int *const num)
 
     // If 'i' is still in its initialized value then the loop must have hit an invalid character
     // immediately, so we leave 'num' alone as per the function's guarantee and return an error code
-    if (i == STR_SIZE - 1)
+    if (STR_PTR_END - str == STR_SIZE - 1)
         return ERRCODE_GENERAL;
 
-    // Finally, we handle the negative sign if necessary
     if (isNegative)
         tempNum *= -1;
 

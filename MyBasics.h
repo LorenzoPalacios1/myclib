@@ -25,7 +25,7 @@ int isAlphaNumerical(const char item);
 
 int isNumerical(const char number);
 
-short int charToInt(const char num);
+int charToInt(const char num);
 
 int strToInt(const char *const str, int *num);
 
