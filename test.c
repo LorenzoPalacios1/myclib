@@ -383,7 +383,7 @@ int main(void)
     global_timer += clock() - user_input_timer;
 
     if (user_choices == NULL)
-        return ERRCODE_NULL_PTR;
+        return ERRCODE_BAD_PTR;
 
     // Now we run the tests
     for (int i = 0; i < NUM_TESTS; i++)

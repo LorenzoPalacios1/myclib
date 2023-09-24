@@ -32,24 +32,28 @@ inline int fDiscardLine(FILE *stream)
         if (getc(stream) == '\n' || feof(stream))
             return ERRCODE_SUCCESS;
     }
-    return ERRCODE_DEFAULT;
+    return ERRCODE_GENERAL;
 }
 
 /*
  * Writes to the first argument, str, from stream until reading the delimiter
  * character, or upon the string reaching the specified length.
  *
- * A null terminator will replace the delimiter within the string.
+ * \returns Returns the length of the string INCLUDING the null terminator, or 0 if nothing was written.
  *
- * Otherwise, if applicable and possible, a null terminator will be appended to the
+ * \note If this function returns 0, the string will be left unmodified (that is, nothing will be written).
+ *
+ * \note A null terminator will replace the delimiter within the string. 
+ * 
+ * \note Otherwise, if 'length' characters were written before the delimiter was read, a null terminator will be appended to the
  * end of the string if no delimiter was read or EOF was not met.
  *
- * If this occurs, the returned value will be length + 1.
+ * \note If this occurs, the returned value will be length + 1.
  *
- * Returns the length of the string INCLUDING the null terminator, or 0 if nothing was written.
- *
- * Returns 0 if stream is at EOF, or if the first character read is the specified delimiter.
- * If this function returns 0, 'str' WILL BE LEFT UNCHANGED (that is, nothing will be written).
+ * \param str The pointer to string that will be written to
+ * \param delim The delimiter character
+ * \param length The maximum size of the string
+ * \param stream The input stream to read from
  */
 size_t getStr(char **str, const char delim, const size_t length, FILE *stream)
 {
@@ -143,22 +147,42 @@ inline size_t getStrStdin(char **str, const size_t length)
 }
 
 /* Returns the first index of the passed character within the passed string after
- * offset.
+ * (strlen(str) + offset).
  *
  * Returns -1 if the character is not present within the string.
  */
-int indexOf(const char *str, const char letter, const size_t offset)
+int indexOf(const char *const str, const char letter, const size_t offset)
 {
     const size_t LENGTH_OF_STR = strlen(str);
-    // Ensuring offset is valid
     if (offset > LENGTH_OF_STR)
     {
         fprintf(stderr, "\nindexOf(): Invalid offset (%llu) for passed string; No reading occurred\n", offset);
         return -1;
     }
 
-    // Searching through the string for the character
-    for (size_t i = offset; i < LENGTH_OF_STR && str[i] != '\0'; i++)
+    for (size_t i = offset; i < LENGTH_OF_STR; i++)
+    {
+        if (str[i] == letter)
+            return i;
+    }
+    return -1;
+}
+
+/* Returns the last index of the passed character within the passed string before
+ * (strlen(str) - offset).
+ *
+ * Returns -1 if the character is not present within the string.
+ */
+int lastIndexOf(const char *const str, const char letter, const size_t offset)
+{
+    const size_t LENGTH_OF_STR = strlen(str);
+    if (offset > LENGTH_OF_STR)
+    {
+        fprintf(stderr, "\nindexOf(): Invalid offset (%llu) for passed string; No reading occurred\n", offset);
+        return -1;
+    }
+
+    for (size_t i = LENGTH_OF_STR - offset; i > 0; i--)
     {
         if (str[i] == letter)
             return i;
@@ -212,19 +236,18 @@ inline short charToInt(const char num)
  * Parses the passed string into an int which will be written to the second argument, 'num'.
  *
  * If this function fails, such as via invalid characters or overflow, 'num' will be left
- * unchanged and ERRCODE_DEFAULT will be returned.
+ * unchanged and ERRCODE_GENERAL will be returned.
  */
-int strToInt(const char *str, int *num)
+int strToInt(const char *const str, int *const num)
 {
     // Validating the string's existence
     if (str == NULL)
     {
         fputs("\nstrToInt(): Passed string is NULL; No conversion occurred", stderr);
-        return ERRCODE_NULL_PTR;
+        return ERRCODE_BAD_PTR;
     }
 
-    // We can use shorts because the length of str should be no longer than INT_MAX_CHARS
-    const unsigned short STR_SIZE = strlen(str);
+    const size_t STR_SIZE = strlen(str);
 
     // The expression below checks if there is a leading dash sign within the string which tells the
     // later parsing loop to ignore this character
@@ -233,7 +256,7 @@ int strToInt(const char *str, int *num)
 
     // Preemptively handling a 0-length string or a single negative dash
     if (STR_SIZE == 0 || (STR_SIZE == 1 && isNegative))
-        return ERRCODE_BAD_STR;
+        return ERRCODE_BAD_INPUT;
 
 
     // Removing any leading zeros and checking for invalid characters since the passed str should contain
@@ -245,7 +268,7 @@ int strToInt(const char *str, int *num)
     while (endIndex < STR_SIZE && (str[endIndex] == '0' || !isNumerical(str[endIndex])))
     {
         if (!isNumerical(str[endIndex]))
-            return ERRCODE_BAD_STR;
+            return ERRCODE_BAD_INPUT;
         endIndex++;
     }
 
@@ -261,7 +284,7 @@ int strToInt(const char *str, int *num)
     if (STR_SIZE - endIndex > INT_MAX_CHARS)
     {
         fprintf(stderr, "\nstrToInt(): String too large (%u); No conversion occurred\n", STR_SIZE);
-        return ERRCODE_BAD_STR;
+        return ERRCODE_BAD_INPUT;
     }
 
     // This, assuming no issues arise while parsing the passed string, will replace the value at 'num'
@@ -314,11 +337,11 @@ int strToInt(const char *str, int *num)
                     return ERRCODE_SUCCESS;
                 }
                 // Catching overflow with an undefined return error code
-                return ERRCODE_DEFAULT;
+                return ERRCODE_GENERAL;
             }
             else
             {
-                return ERRCODE_BAD_STR;
+                return ERRCODE_BAD_INPUT;
             }
         }
         else // Break upon hitting anything non-numeric
@@ -330,7 +353,7 @@ int strToInt(const char *str, int *num)
     // If 'i' is still in its initialized value then the loop must have hit an invalid character
     // immediately, so we leave 'num' alone as per the function's guarantee and return an error code
     if (i == STR_SIZE - 1)
-        return ERRCODE_DEFAULT;
+        return ERRCODE_GENERAL;
 
     // Finally, we handle the negative sign if necessary
     if (isNegative)
@@ -357,14 +380,14 @@ int readInt(int *num, FILE *stream)
     if (num == NULL)
     {
         fputs("\nreadInt(): Passed int pointer is NULL; No reading occurred", stderr);
-        return ERRCODE_NULL_PTR;
+        return ERRCODE_BAD_PTR;
     }
 
     // 'stream' validation
     if (stream == NULL)
     {
         fputs("\nreadInt(): Passed file is NULL; No reading occurred", stderr);
-        return ERRCODE_NULL_FILE;
+        return ERRCODE_BAD_FILE;
     }
 
     // Preliminary check to ensure 'stream' isn't already at EOF
