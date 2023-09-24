@@ -15,7 +15,9 @@ size_t getStr(char **str, const char delim, const size_t length, FILE *stream);
 
 size_t getStrStdin(char **str, const size_t length);
 
-int indexOf(const char *str, const char letter, const size_t offset);
+int indexOf(const char *const str, const char letter, const size_t offset);
+
+int lastIndexOf(const char *const str, const char letter, const size_t offset);
 
 int isAlphabetical(const char letter);
 
@@ -25,6 +27,6 @@ int isNumerical(const char number);
 
 short int charToInt(const char num);
 
-int strToInt(const char *str, int *num);
+int strToInt(const char *const str, int *num);
 
 int readInt(int *num, FILE *stream);
