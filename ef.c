@@ -4,7 +4,7 @@
 int main(void)
 {
     int a = -2;
-    strToInt("-12", &a);
+    strToInt("99999999999999999999999999999999", &a);
     printf("%d", a);
     return 0;
 }

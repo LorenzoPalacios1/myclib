@@ -242,11 +242,11 @@ int strToInt(const char *str, int *const num)
             return ERRCODE_BAD_INPUT;
         }
     }
-    // This, assuming no issues arise while parsing the passed string, will replace the value at 'num'
-    int tempNum = 0;
+    
+    int tempNum = 0; // This will replace 'num' upon function success
     int placeValue = 1;
 
-    // Iterating over the string in reverse so we can assign the correct place values with as little hassle
+    // Iterating over the string in reverse allows for the correct place values to be assigned with as little hassle
     // as possible.
     // STR_PTR_END - 1 to discount the null terminator
     for (str = STR_PTR_END - 1; str >= STR_PTR_START; str--)
@@ -329,21 +329,18 @@ int strToInt(const char *str, int *const num)
  */
 int readInt(int *const num, FILE *stream)
 {
-    // 'num' pointer validation
     if (num == NULL)
     {
         fputs("\nreadInt(): Passed int pointer is NULL; No reading occurred", stderr);
         return ERRCODE_BAD_PTR;
     }
 
-    // 'stream' validation
     if (stream == NULL)
     {
         fputs("\nreadInt(): Passed file is NULL; No reading occurred", stderr);
         return ERRCODE_BAD_FILE;
     }
 
-    // Preliminary check to ensure 'stream' isn't already at EOF
     if (feof(stream))
     {
         fputs("\nreadInt(): Passed file is already at EOF; No reading occurred", stderr);
@@ -353,19 +350,14 @@ int readInt(int *const num, FILE *stream)
     // Buffer size of 12 (for Windows running on my Surface Go) since a typical int can hold 10 numbers
     // including a dash in the case of negative values for a total of 11 characters (INT_MAX_CHARS).
     // Then we need to account for the null terminator, so we add 1 to INT_MAX_CHARS.
-    static const unsigned short BUFFER_SIZE = sizeof(char) * (INT_MAX_CHARS + 1);
-    char buffer[BUFFER_SIZE];
+    static char buffer[INT_MAX_CHARS + 1];
 
     int i = -1;
-    // Handling the trailing dash if present
+    // We count a single trailing dash as a valid character, so we increment 'i' just as we would for a digit
     if ((buffer[0] = getc(stream)) == '-')
-    {
-        ++i; // We count the dash as a valid character, so we increment 'i' just as we would for a digit
-    }
-    else // Restore the character otherwise since it could be a valid digit
-    {
+        ++i; 
+    else
         ungetc(buffer[0], stream);
-    }
 
     while (i < INT_MAX_CHARS && isNumerical((buffer[++i] = getc(stream))))
         ;
