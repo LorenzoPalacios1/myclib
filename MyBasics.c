@@ -146,50 +146,6 @@ inline size_t getStrStdin(char **str, const size_t length)
     return numChars;
 }
 
-/* Returns the first index of the passed character within the passed string after
- * (strlen(str) + offset).
- *
- * Returns -1 if the character is not present within the string.
- */
-int indexOf(const char *const str, const char letter, const size_t offset)
-{
-    const size_t LENGTH_OF_STR = strlen(str);
-    if (offset > LENGTH_OF_STR)
-    {
-        fprintf(stderr, "\nindexOf(): Invalid offset (%llu) for passed string; No reading occurred\n", offset);
-        return -1;
-    }
-
-    for (size_t i = offset; i < LENGTH_OF_STR; i++)
-    {
-        if (str[i] == letter)
-            return i;
-    }
-    return -1;
-}
-
-/* Returns the last index of the passed character within the passed string before
- * (strlen(str) - offset).
- *
- * Returns -1 if the character is not present within the string.
- */
-int lastIndexOf(const char *const str, const char letter, const size_t offset)
-{
-    const size_t LENGTH_OF_STR = strlen(str);
-    if (offset > LENGTH_OF_STR)
-    {
-        fprintf(stderr, "\nindexOf(): Invalid offset (%llu) for passed string; No reading occurred\n", offset);
-        return -1;
-    }
-
-    for (size_t i = LENGTH_OF_STR - offset; i > 0; i--)
-    {
-        if (str[i] == letter)
-            return i;
-    }
-    return -1;
-}
-
 /*
  * Returns true, if the passed char represents an alphabetical letter.
  *
@@ -371,7 +327,7 @@ int strToInt(const char *str, int *const num)
  * Returns 1 if the passed arguments were valid, but no characters in the stream
  * were parsable, or if type int was overflowed.
  */
-int readInt(int *num, FILE *stream)
+int readInt(int *const num, FILE *stream)
 {
     // 'num' pointer validation
     if (num == NULL)

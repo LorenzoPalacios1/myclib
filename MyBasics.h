@@ -27,6 +27,6 @@ int isNumerical(const char number);
 
 int charToInt(const char num);
 
-int strToInt(const char *const str, int *num);
+int strToInt(const char *const str, int *const num);
 
-int readInt(int *num, FILE *stream);
+int readInt(int *const num, FILE *stream);
