@@ -15,10 +15,6 @@ size_t getStr(char **str, const char delim, const size_t length, FILE *stream);
 
 size_t getStrStdin(char **str, const size_t length);
 
-int indexOf(const char *const str, const char letter, const size_t offset);
-
-int lastIndexOf(const char *const str, const char letter, const size_t offset);
-
 int isAlphabetical(const char letter);
 
 int isAlphaNumerical(const char item);
