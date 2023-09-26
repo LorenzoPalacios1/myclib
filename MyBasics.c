@@ -250,12 +250,10 @@ int strToInt(const char *str, int *const num)
     // If there is a leading dash sign within the string then the later parsing loop will know
     // to ignore this character
     const char isNegative = (*str == '-');
-    const char *const STR_PTR_START = str;
-    const char *const STR_PTR_OFFSET = NULL;
+    const char *const STR_PTR_START = str + isNegative;
     const char *const STR_PTR_END = STR_PTR_START + strlen(str);
     {
         const size_t STR_SIZE = STR_PTR_END - STR_PTR_START;
-
         // Preemptively handling a 0-length string or a single negative dash
         if (STR_SIZE == 0 || (STR_SIZE == 1 && isNegative))
             return ERRCODE_BAD_INPUT;
@@ -288,19 +286,18 @@ int strToInt(const char *str, int *const num)
             return ERRCODE_BAD_INPUT;
         }
     }
-
     // This, assuming no issues arise while parsing the passed string, will replace the value at 'num'
     int tempNum = 0;
     int placeValue = 1;
 
-    // Iterating over 'str' in reverse so we can assign the correct place values with as little hassle
+    // Iterating over the string in reverse so we can assign the correct place values with as little hassle
     // as possible.
-    // "STR_SIZE - 1" to skip the null terminator
-    while (str != STR_PTR_END)
+    // STR_PTR_END - 1 to discount the null terminator
+    for (str = STR_PTR_END - 1; str >= STR_PTR_START; str--)
     {
         // This value will only hold a single digit's worth since it calls charToInt(), hence the
         // usage of 'char', however it could contain a negative value
-        const char currentNum = charToInt(*str++);
+        const char currentNum = charToInt(*str);
 
         // We can skip any values of 0
         if (currentNum == '0')
@@ -308,7 +305,7 @@ int strToInt(const char *str, int *const num)
             placeValue *= 10;
             continue;
         }
-
+    
         if (currentNum != -1)
         {
             // Ensuring no overflow will occur
@@ -351,9 +348,9 @@ int strToInt(const char *str, int *const num)
         }
     }
 
-    // If 'i' is still in its initialized value then the loop must have hit an invalid character
-    // immediately, so we leave 'num' alone as per the function's guarantee and return an error code
-    if (STR_PTR_END - str == STR_SIZE - 1)
+    // If 'str' is still in its initialized value then the loop must have hit an invalid character
+    // upon the first iteration, so we leave 'num' alone as per the function's guarantee and exit
+    if (STR_PTR_END - str == STR_PTR_END - STR_PTR_START - 1)
         return ERRCODE_GENERAL;
 
     if (isNegative)
