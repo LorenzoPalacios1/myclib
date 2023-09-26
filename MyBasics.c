@@ -261,7 +261,7 @@ int strToInt(const char *str, int *const num)
             placeValue *= 10;
             continue;
         }
-    
+
         if (currentNum != -1)
         {
             // Ensuring no overflow will occur
