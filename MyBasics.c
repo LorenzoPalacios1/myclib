@@ -196,69 +196,29 @@ inline int charToInt(const char num)
  */
 int strToInt(const char *str, int *const num)
 {
-    // Validating the string's existence
     if (str == NULL)
     {
         fputs("\nstrToInt(): Passed string is NULL; No conversion occurred", stderr);
         return ERRCODE_BAD_PTR;
     }
 
-    // If there is a leading dash sign within the string then the later parsing loop will know
-    // to ignore this character
     const char isNegative = (*str == '-');
     const char *const STR_PTR_START = str + isNegative;
-    const char *const STR_PTR_END = STR_PTR_START + strlen(str);
-    {
-        const size_t STR_SIZE = STR_PTR_END - STR_PTR_START;
-        // Preemptively handling a 0-length string or a single negative dash
-        if (STR_SIZE == 0 || (STR_SIZE == 1 && isNegative))
-            return ERRCODE_BAD_INPUT;
+    // "strlen(str) - 1" to discount the null terminator
+    const char *const STR_PTR_END = str + strlen(str) - 1;
 
-        // Removing any leading zeros and checking for invalid characters since the passed str should contain
-        // only numerical characters, and any leading non-numerical characters would simply be ignored rather
-        // than stopping function flow.
-        // Otherwise, this would make things like "asd8327" valid, causing 'num' to equal 8327, but things like
-        // "8327asd" would cause the function to terminate (as it should), leaving 'num' unchanged.
-        while (str < STR_PTR_END && (*str == '0' || !isNumerical(*str)))
-        {
-            if (!isNumerical(*str))
-                return ERRCODE_BAD_INPUT;
-            str++;
-        }
-
-        // If a string of only zeros or similar is the passed string, we handle that here since it is technically
-        // valid, but the above loop would set str to STR_PTR_END and the later parsing loop won't run, which would
-        // then cause *num to be unchanged since the checks afterward would assume the input string was invalid.
-        if (str == STR_PTR_END && *str - 1 == '0')
-        {
-            *num = 0;
-            return ERRCODE_SUCCESS;
-        }
-
-        // Ensuring that the string isn't long enough to definitively overflow int
-        if (STR_PTR_END - str > INT_MAX_CHARS)
-        {
-            fprintf(stderr, "\nstrToInt(): String too large (%u); No conversion occurred\n", STR_SIZE);
-            return ERRCODE_BAD_INPUT;
-        }
-    }
-    
     int tempNum = 0; // This will replace 'num' upon function success
     int placeValue = 1;
-
     // Iterating over the string in reverse allows for the correct place values to be assigned with as little hassle
-    // as possible.
-    // STR_PTR_END - 1 to discount the null terminator
-    for (str = STR_PTR_END - 1; str >= STR_PTR_START; str--)
+    // as possible
+    for (str = STR_PTR_END; str >= STR_PTR_START; --str)
     {
-        // This value will only hold a single digit's worth since it calls charToInt(), hence the
-        // usage of 'char', however it could contain a negative value
         const char currentNum = charToInt(*str);
-
         // We can skip any values of 0
         if (currentNum == '0')
         {
-            placeValue *= 10;
+            putchar('a');
+            placeValue *= (tempNum == 0) ? 1 : 10;
             continue;
         }
 
@@ -294,14 +254,10 @@ int strToInt(const char *str, int *const num)
                 return ERRCODE_GENERAL;
             }
             else
-            {
                 return ERRCODE_BAD_INPUT;
-            }
         }
         else // Break upon hitting anything non-numeric
-        {
             break;
-        }
     }
 
     // If 'str' is still in its initialized value then the loop must have hit an invalid character
@@ -355,14 +311,13 @@ int readInt(int *const num, FILE *stream)
     int i = -1;
     // We count a single trailing dash as a valid character, so we increment 'i' just as we would for a digit
     if ((buffer[0] = getc(stream)) == '-')
-        ++i; 
+        ++i;
     else
         ungetc(buffer[0], stream);
 
     while (i < INT_MAX_CHARS && isNumerical((buffer[++i] = getc(stream))))
         ;
 
-    // Setting the null terminator below
     buffer[i] = '\0';
 
     return strToInt(buffer, num);
