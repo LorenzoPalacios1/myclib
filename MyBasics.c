@@ -2,17 +2,8 @@
 #include <string.h>
 #include "MyBasics.h"
 
-// Determines the maximum number of characters fDiscardLine() should discard before
-// stopping if it doesn't reach a newline character.
-#define FDISCARDLINE_MAX_READS 50000000
-
 // Determines the number of characters that would be within the string equivalent of INT_MAX.
 #define INT_MAX_CHARS 11
-
-// Miscellaneous macros used by strToInt()
-#define INT_MAX_PLACEVALUE 1000000000
-#define INT_OVERFLOW_CHK 147483647
-#define UINT_OVERFLOW_CHK (INT_OVERFLOW_CHK + 1)
 
 /*
  * Will discard a line of input within 'stream' until meeting a newline character or EOF.
@@ -25,9 +16,10 @@
  *
  * Returns 0 on success, and 1 upon failure.
  */
-inline int fDiscardLine(FILE *stream)
+int fDiscardLine(FILE *stream)
 {
-    for (int i = 0; i < FDISCARDLINE_MAX_READS; i++)
+    const static size_t MAX_READS = 50000000;
+    for (size_t i = 0; i < MAX_READS; ++i)
     {
         if (getc(stream) == '\n' || feof(stream))
             return ERRCODE_SUCCESS;
@@ -45,8 +37,8 @@ inline int fDiscardLine(FILE *stream)
  *
  * \note A null terminator will replace the delimiter within the string.
  *
- * \note Otherwise, if 'length' characters were written before the delimiter was read, a null terminator will be appended to the
- * end of the string if no delimiter was read or EOF was not met.
+ * \note Otherwise, if 'length' characters were written before the delimiter was read, a null terminator will be
+ * appended to the end of the string if no delimiter was read or EOF was not met.
  *
  * \note If this occurs, the returned value will be length + 1.
  *
@@ -87,7 +79,7 @@ size_t getStr(char **str, const char delim, const size_t length, FILE *stream)
     // "length + 1" to ensure there is always space for a null terminator
     char buffer[length + 1];
     size_t i = 0;
-    for (; i < length; i++)
+    for (; i < length; ++i)
     {
         buffer[i] = getc(stream);
         if (buffer[i] == delim || buffer[i] == EOF)
@@ -151,19 +143,13 @@ inline size_t getStrStdin(char **str, const size_t length)
  *
  * Otherwise returns false.
  */
-inline int isAlphabetical(const char letter)
-{
-    return ((letter >= 'a' && letter <= 'z') || (letter >= 'A' && letter <= 'Z'));
-}
+inline int isAlphabetical(const char letter);
 
 /* Returns non-zero, true, if the passed char represents a number.
  *
  * Otherwise, this returns 0, false.
  */
-inline int isNumerical(const char number)
-{
-    return (number >= '0' && number <= '9');
-}
+inline int isNumerical(const char number);
 
 /*
  * Returns non-zero, true, if the passed char represents either a number
@@ -171,22 +157,14 @@ inline int isNumerical(const char number)
  *
  * Returns 0, false, otherwise.
  */
-inline int isAlphaNumerical(const char item)
-{
-    return (isAlphabetical(item) || isNumerical(item));
-}
+inline int isAlphaNumerical(const char item);
 
 /*
  * Returns the passed character as an integer singleton (0-9), if possible.
  *
  * If the passed character does not represent an integer, this function returns -1.
  */
-inline int charToInt(const char num)
-{
-    if (isNumerical(num))
-        return num - '0';
-    return -1;
-}
+inline int charToInt(const char num);
 
 /*
  * Parses the passed string into an int which will be written to the second argument, 'num'.
@@ -198,66 +176,62 @@ int strToInt(const char *str, int *const num)
 {
     if (str == NULL)
     {
-        fputs("\nstrToInt(): Passed string is NULL; No conversion occurred", stderr);
+        fputs("\nstrToInt(): 'str' is NULL; No conversion occurred", stderr);
+        return ERRCODE_BAD_PTR;
+    }
+    if (num == NULL)
+    {
+        fputs("\nstrToInt(): 'num' is NULL; No conversion occurred", stderr);
         return ERRCODE_BAD_PTR;
     }
 
-    const char isNegative = (*str == '-');
-    const char *const STR_PTR_START = str + isNegative;
-    // "strlen(str) - 1" to discount the null terminator
-    const char *const STR_PTR_END = str + strlen(str) - 1;
+    const static int INT_MAX_OVERFLOW_CHK = 147483647;
+    const static int INT_MIN_OVERFLOW_CHK = INT_MAX_OVERFLOW_CHK + 1;
+    const static int MAX_PLACE_VALUE = 1000000000;
 
-    int tempNum = 0; // This will replace 'num' upon function success
+    const char containsSign = (*str == '-' || *str == '+');
+    const char isNegative = (*str == '-');
+    const char *const STR_PTR_START = str + containsSign;
+    const char *const STR_PTR_END = str + strlen(str) - 1; // "strlen(str) - 1" to discount the null terminator
+
+    int tempNum = 0; // This will replace 'num' upon the function's successful completion
     int placeValue = 1;
-    // Iterating over the string in reverse allows for the correct place values to be assigned with as little hassle
-    // as possible
-    for (str = STR_PTR_END; str >= STR_PTR_START; --str)
+
+    // Iterating over the string in reverse allows for the correct place values to be assigned with
+    // as little hassle as possible
+    for (str = STR_PTR_END; str >= STR_PTR_START; --str, placeValue *= (placeValue == MAX_PLACE_VALUE) ? 1 : 10, puts("ran"))
     {
         const char currentNum = charToInt(*str);
-        // We can skip any values of 0
-        if (currentNum == '0')
-        {
-            putchar('a');
-            placeValue *= (tempNum == 0) ? 1 : 10;
-            continue;
-        }
 
-        if (currentNum != -1)
+        if (currentNum == -1)
+            return ERRCODE_BAD_INPUT;
+
+        // We can skip any values of 0
+        if (currentNum == 0 && placeValue < MAX_PLACE_VALUE)
+            continue;
+
+        if (placeValue != MAX_PLACE_VALUE)
+            tempNum += currentNum * placeValue;
+        // Safely handling anything that might approach INT_MAX or INT_MIN
+        else if (currentNum <= 2)
         {
-            // Ensuring no overflow will occur
-            if (tempNum - INT_OVERFLOW_CHK <= 0 && placeValue != INT_MAX_PLACEVALUE)
+            // Before we add the final digit, we check to see if doing so would cause an overflow
+            if (tempNum - INT_MAX_OVERFLOW_CHK <= 0)
             {
                 tempNum += currentNum * placeValue;
-                placeValue *= 10;
+                break;
             }
-            // Safely handling anything that approaches INT_MAX or INT_MIN
-            else if (currentNum <= 2)
+            // Handling the edge case of INT_MIN being greater than INT_MAX by 1
+            if (isNegative && tempNum - INT_MIN_OVERFLOW_CHK == 0)
             {
-                // If the digits added to 'tempNum' so far are below INT_MAX (since 'tempNum' should never
-                // be negative), there can be nothing else added without risking overflow, so we break out.
-                // The number could still be negative however, so we let the function run to its end to
-                // handle this.
-                if (tempNum - INT_OVERFLOW_CHK <= 0)
-                {
-                    tempNum += currentNum * placeValue;
-                    break;
-                }
-                // This just handles the edge case of INT_MIN being greater than INT_MAX by 1, which would
-                // cause the above if-statement to not run (and int would overflow anyway if it did).
-                // In that case, the value is almost definitely INT_MIN, so we just assign that to 'num'.
-                if (isNegative && tempNum - UINT_OVERFLOW_CHK == 0)
-                {
-                    *num = INT_MIN;
-                    return ERRCODE_SUCCESS;
-                }
-                // Catching overflow with an undefined return error code
-                return ERRCODE_GENERAL;
+                *num = INT_MIN;
+                return ERRCODE_SUCCESS;
             }
-            else
-                return ERRCODE_BAD_INPUT;
+            // Catching overflow with an undefined return error code
+            return ERRCODE_GENERAL;
         }
-        else // Break upon hitting anything non-numeric
-            break;
+        else
+            return ERRCODE_BAD_INPUT;
     }
 
     // If 'str' is still in its initialized value then the loop must have hit an invalid character

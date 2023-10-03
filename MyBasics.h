@@ -15,13 +15,27 @@ size_t getStr(char **str, const char delim, const size_t length, FILE *stream);
 
 size_t getStrStdin(char **str, const size_t length);
 
-int isAlphabetical(const char letter);
+inline int isAlphabetical(const char letter)
+{
+    return ((letter >= 'a' && letter <= 'z') || (letter >= 'A' && letter <= 'Z'));
+}
 
-int isAlphaNumerical(const char item);
+inline int isNumerical(const char number)
+{
+    return (number >= '0' && number <= '9');
+}
 
-int isNumerical(const char number);
+inline int isAlphaNumerical(const char item)
+{
+    return (isAlphabetical(item) || isNumerical(item));
+}
 
-int charToInt(const char num);
+inline int charToInt(const char num)
+{
+    if (isNumerical(num))
+        return num - '0';
+    return -1;
+}
 
 int strToInt(const char *const str, int *const num);
 
