@@ -6,28 +6,6 @@
 #define INT_MAX_CHARS 11
 
 /*
- * Will discard a line of input within 'stream' until meeting a newline character or EOF.
- * Note that this will also discard the newline character.
- *
- * Use fseek(stdin, 0, SEEK_END) to clear the contents of 'stdin' instead of using this function.
- *
- * To prevent potential hanging, the loop within this function will terminate after
- * reading an FDISCARDLINE_MAX_READS number of characters from 'stream'.
- *
- * Returns 0 on success, and 1 upon failure.
- */
-int fDiscardLine(FILE *stream)
-{
-    const static size_t MAX_READS = 50000000;
-    for (size_t i = 0; i < MAX_READS; ++i)
-    {
-        if (getc(stream) == '\n' || feof(stream))
-            return ERRCODE_SUCCESS;
-    }
-    return ERRCODE_GENERAL;
-}
-
-/*
  * Writes to the first argument, str, from stream until reading the delimiter
  * character, or upon the string reaching the specified length.
  *

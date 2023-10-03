@@ -9,8 +9,6 @@
 #define ERRCODE_FILE_AT_EOF 4 // Code denoting that the given FILE is at EOF *before* any reading occurred.
 #define ERRCODE_BAD_INPUT 5   // Code denoting a bad string (eg. passing alphabetical chars to strToInt())
 
-int fDiscardLine(FILE *stream);
-
 size_t getStr(char **str, const char delim, const size_t length, FILE *stream);
 
 size_t getStrStdin(char **str, const size_t length);
