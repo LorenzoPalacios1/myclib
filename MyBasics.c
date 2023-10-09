@@ -173,30 +173,30 @@ int strToInt(const char *str, int *const num)
     const char *const STR_PTR_END = str + strlen(str) - 1; // "strlen(str) - 1" to discount the null terminator
 
     int tempNum = 0; // This will replace 'num' upon the function's successful completion
-    int placeValue = 1;
+    unsigned placeValue = 1;
 
     // Iterating over the string in reverse allows for the correct place values to be assigned with
     // as little hassle as possible
     for (str = STR_PTR_END; str >= STR_PTR_START; --str, placeValue *= (placeValue == MAX_PLACE_VALUE) ? 1 : 10, puts("ran"))
     {
-        const char currentNum = charToInt(*str);
+        const char currentDigit = charToInt(*str);
 
-        if (currentNum == -1)
+        if (currentDigit == -1)
             return ERRCODE_BAD_INPUT;
 
         // We can skip any values of 0
-        if (currentNum == 0 && placeValue < MAX_PLACE_VALUE)
+        if (currentDigit == 0 && placeValue < MAX_PLACE_VALUE)
             continue;
 
         if (placeValue != MAX_PLACE_VALUE)
-            tempNum += currentNum * placeValue;
+            tempNum += currentDigit * placeValue;
         // Safely handling anything that might approach INT_MAX or INT_MIN
-        else if (currentNum <= 2)
+        else if (currentDigit <= 2)
         {
             // Before we add the final digit, we check to see if doing so would cause an overflow
             if (tempNum - INT_MAX_OVERFLOW_CHK <= 0)
             {
-                tempNum += currentNum * placeValue;
+                tempNum += currentDigit * placeValue;
                 break;
             }
             // Handling the edge case of INT_MIN being greater than INT_MAX by 1

@@ -17,7 +17,7 @@ inline int isAlphabetical(const char letter)
 {
     return ((letter >= 'a' && letter <= 'z') || (letter >= 'A' && letter <= 'Z'));
 }
-gcc -O2 -pedantic -Wall -Werror -Wextra MyBasics.c a.c -o a && a
+
 inline int isNumerical(const char number)
 {
     return (number >= '0' && number <= '9');
