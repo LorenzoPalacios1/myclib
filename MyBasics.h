@@ -13,22 +13,42 @@ size_t getStr(char **str, const char delim, const size_t length, FILE *stream);
 
 size_t getStrStdin(char **str, const size_t length);
 
-inline int isAlphabetical(const char letter)
+/*
+ * Returns true, if the passed char represents an alphabetical letter.
+ *
+ * Otherwise returns false.
+ */
+static inline int isAlphabetical(const char letter)
 {
     return ((letter >= 'a' && letter <= 'z') || (letter >= 'A' && letter <= 'Z'));
 }
 
-inline int isNumerical(const char number)
+/* Returns non-zero, true, if the passed char represents a number.
+ *
+ * Otherwise, this returns 0, false.
+ */
+static inline int isNumerical(const char number)
 {
     return (number >= '0' && number <= '9');
 }
 
-inline int isAlphaNumerical(const char item)
+/*
+ * Returns non-zero, true, if the passed char represents either a number
+ * or alphabetical letter.
+ *
+ * Returns 0, false, otherwise.
+ */
+static inline int isAlphaNumerical(const char item)
 {
     return (isAlphabetical(item) || isNumerical(item));
 }
 
-inline int charToInt(const char num)
+/*
+ * Returns the passed character as an integer singleton (0-9), if possible.
+ *
+ * If the passed character does not represent an integer, this function returns -1.
+ */
+static inline int charToInt(const char num)
 {
     if (isNumerical(num))
         return num - '0';

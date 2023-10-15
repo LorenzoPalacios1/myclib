@@ -117,34 +117,6 @@ inline size_t getStrStdin(char **str, const size_t length)
 }
 
 /*
- * Returns true, if the passed char represents an alphabetical letter.
- *
- * Otherwise returns false.
- */
-inline int isAlphabetical(const char letter);
-
-/* Returns non-zero, true, if the passed char represents a number.
- *
- * Otherwise, this returns 0, false.
- */
-inline int isNumerical(const char number);
-
-/*
- * Returns non-zero, true, if the passed char represents either a number
- * or alphabetical letter.
- *
- * Returns 0, false, otherwise.
- */
-inline int isAlphaNumerical(const char item);
-
-/*
- * Returns the passed character as an integer singleton (0-9), if possible.
- *
- * If the passed character does not represent an integer, this function returns -1.
- */
-inline int charToInt(const char num);
-
-/*
  * Parses the passed string into an int which will be written to the second argument, 'num'.
  *
  * If this function fails, such as via invalid characters or overflow, 'num' will be left
