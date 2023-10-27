@@ -149,7 +149,7 @@ int strToInt(const char *str, int *const num)
 
     // Iterating over the string in reverse allows for the correct place values to be assigned with
     // as little hassle as possible
-    for (str = STR_PTR_END; str >= STR_PTR_START; --str, placeValue *= (placeValue == MAX_PLACE_VALUE) ? 1 : 10, puts("ran"))
+    for (str = STR_PTR_END; str >= STR_PTR_START; --str, placeValue *= (placeValue == MAX_PLACE_VALUE) ? 1 : 10)
     {
         const char currentDigit = charToInt(*str);
 
