@@ -96,6 +96,28 @@ size_t getStr(char **str, const char delim, const size_t length, FILE *stream)
 }
 
 /*
+ * Returns the index of the first occurence of 'needle' from the median of the 
+ * given haystack.
+ * 
+ * Tends to return higher value indexes rather than lower value indexes.
+ */
+long long lsearch_mid(const void *const needle, const void *const haystack, const size_t haystack_size)
+{
+    const long long target = *(const long long *const)needle;
+    const long long *hay = *(const long long *const*)haystack;
+
+    for (long i = 0; i <= (long long)haystack_size / 2; i++)
+    {
+        if (hay[haystack_size / 2 + i] == target)
+            return haystack_size / 2 + i;
+
+        if (hay[haystack_size / 2 - i] == target)
+            return haystack_size / 2 - i;
+    }
+    return -1;
+}
+
+/*
  * Writes to the first argument, 'str', from stdin until reading a newline character,
  * or upon the string reaching the specified length.
  *

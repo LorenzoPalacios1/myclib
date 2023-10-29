@@ -13,6 +13,8 @@ size_t getStr(char **str, const char delim, const size_t length, FILE *stream);
 
 size_t getStrStdin(char **str, const size_t length);
 
+long long lsearch_mid(const void *const needle, const void *const haystack, const size_t haystack_size);
+
 /*
  * Returns true, if the passed char represents an alphabetical letter.
  *
