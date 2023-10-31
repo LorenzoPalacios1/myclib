@@ -96,25 +96,23 @@ size_t getStr(char **str, const char delim, const size_t length, FILE *stream)
 }
 
 /*
- * Returns the index of the first occurence of 'needle' from the median of the 
+ * Returns the index of the first occurence of 'needle' from the median of the
  * given haystack.
- * 
+ *
  * Tends to return higher value indexes rather than lower value indexes.
  */
-long long lsearch_mid(const void *const needle, const void *const haystack, const size_t haystack_size)
+void *lsearch_mid(const void *const needle, const void *const haystack, const size_t haystack_size, int cmp(const void *const a, void const *const b))
 {
-    const long long target = *(const long long *const)needle;
-    const long long *hay = *(const long long *const*)haystack;
-
     for (long i = 0; i <= (long long)haystack_size / 2; i++)
     {
-        if (hay[haystack_size / 2 + i] == target)
-            return haystack_size / 2 + i;
+        const void *const current_ptr = haystack + haystack_size / 2;
+        if (cmp((current_ptr + i), needle) == 0)
+            return (void *)current_ptr + i;
 
-        if (hay[haystack_size / 2 - i] == target)
-            return haystack_size / 2 - i;
+        if (cmp((current_ptr + i), needle) == 0)
+            return (void *)current_ptr - i;
     }
-    return -1;
+    return NULL;
 }
 
 /*
