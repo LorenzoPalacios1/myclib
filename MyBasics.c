@@ -25,7 +25,7 @@
  * \param length The maximum size of the string
  * \param stream The input stream to read from
  */
-size_t getStr(char **str, const char delim, const size_t length, FILE *stream)
+size_t getStr(char **const str, const char delim, const size_t length, FILE *const stream)
 {
     // Validating the pointer to the string
     if (str == NULL)
@@ -106,10 +106,12 @@ void *lsearch_mid(const void *const needle, const void *const haystack, const si
     for (long i = 0; i <= (long long)haystack_size / 2; i++)
     {
         const void *const current_ptr = haystack + haystack_size / 2;
+        // Search right
         if (cmp((current_ptr + i), needle) == 0)
             return (void *)current_ptr + i;
 
-        if (cmp((current_ptr + i), needle) == 0)
+        // Search left
+        if (cmp((current_ptr - i), needle) == 0)
             return (void *)current_ptr - i;
     }
     return NULL;
@@ -125,7 +127,7 @@ void *lsearch_mid(const void *const needle, const void *const haystack, const si
  *
  * This function has the same semantics as getStr() aside from the flushing of stdin.
  */
-inline size_t getStrStdin(char **str, const size_t length)
+inline size_t getStrStdin(char **const str, const size_t length)
 {
     const size_t numChars = getStr(str, '\n', length, stdin);
     // If 'numChars' is greater than the passed length, that means getStr() appended a null terminator
@@ -149,6 +151,7 @@ int strToInt(const char *str, int *const num)
         fputs("\nstrToInt(): 'str' is NULL; No conversion occurred", stderr);
         return ERRCODE_BAD_PTR;
     }
+
     if (num == NULL)
     {
         fputs("\nstrToInt(): 'num' is NULL; No conversion occurred", stderr);
