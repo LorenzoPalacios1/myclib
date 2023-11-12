@@ -103,16 +103,18 @@ size_t getStr(char **const str, const char delim, const size_t length, FILE *con
  */
 void *lsearch_mid(const void *const needle, const void *const haystack, const size_t haystack_size, int cmp(const void *const a, void const *const b))
 {
-    for (long i = 0; i <= (long long)haystack_size / 2; i++)
+    const char *const workable_haystack = haystack;
+    const size_t mid_index = (haystack_size / 2) + (haystack_size % 2);
+    for (size_t i = haystack_size / 2; i < haystack_size; i++)
     {
-        const void *const current_ptr = haystack + haystack_size / 2;
-        // Search right
-        if (cmp((current_ptr + i), needle) == 0)
-            return (void *)current_ptr + i;
+        const char *const current_ptr = workable_haystack + haystack_size / 2;
+        // Search towards the right
+        if (cmp((&(current_ptr[i])), needle) == 0)
+            return (void *)(current_ptr + i);
 
-        // Search left
-        if (cmp((current_ptr - i), needle) == 0)
-            return (void *)current_ptr - i;
+        // Search towards the left
+        if (cmp(&(current_ptr[mid_index - i]), needle) == 0)
+            return (void *)(current_ptr - i);
     }
     return NULL;
 }
