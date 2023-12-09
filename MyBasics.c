@@ -45,9 +45,9 @@ size_t getStr(char **const str, const char delim, const size_t length, FILE *con
         return 0;
     }
 
-    if (max_length == 0)
+    if (length == 0)
     {
-        fprintf(stderr, "\ngetStr(): Invalid string length (%llu); No reading occurred\n", max_length);
+        fprintf(stderr, "\ngetStr(): Invalid string length (%llu); No reading occurred\n", length);
         return 0;
     }
 
@@ -61,9 +61,9 @@ size_t getStr(char **const str, const char delim, const size_t length, FILE *con
         return 0;
 
     // "length + 1" to ensure there is always space for a null terminator
-    char buffer[max_length + 1];
+    char buffer[length + 1];
     size_t i = 0;
-    for (; i < max_length; ++i)
+    for (; i < length; ++i)
     {
         buffer[i] = getc(stream);
         if (buffer[i] == delim || buffer[i] == EOF)
