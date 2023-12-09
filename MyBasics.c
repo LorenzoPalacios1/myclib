@@ -129,7 +129,7 @@ void *lsearch_mid(const void *const needle, const void *const haystack, const si
  *
  * This function has the same semantics as getStr() aside from the flushing of stdin.
  */
-inline size_t getStrStdin(char **const str, const size_t length)
+size_t getStrStdin(char **const str, const size_t length)
 {
     const size_t numChars = getStr(str, '\n', length, stdin);
     // If 'numChars' is greater than the passed length, that means getStr() appended a null terminator
