@@ -37,7 +37,7 @@
  * \param length The maximum size of the string
  * \param stream The input stream to read from
  */
-size_t getStr(char **str, const char delim, const size_t max_length, FILE *stream)
+size_t getStr(char **const str, const char delim, const size_t length, FILE *const stream)
 {
     if (str == NULL)
     {
@@ -104,7 +104,7 @@ size_t getStr(char **str, const char delim, const size_t max_length, FILE *strea
  *
  * This function has the same semantics as getStr() aside from the flushing of stdin.
  */
-inline size_t getStrStdin(char **str, const size_t length)
+size_t getStrStdin(char **const str, const size_t length)
 {
     const size_t numChars = getStr(str, '\n', length, stdin);
     // If 'numChars' is greater than the passed length, that means getStr() appended a null terminator
