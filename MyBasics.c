@@ -1,6 +1,18 @@
+#if !defined _INC_STDLIB
 #include <stdlib.h>
+#endif
+
+#if !defined _INC_STRING
 #include <string.h>
+#endif
+
+#if !defined __CLANG_LIMITS_H || !defined _GCC_LIMITS_H_
+#include <limits.h>
+#endif
+
+#if !defined _INC_MYBASICS
 #include "MyBasics.h"
+#endif
 
 // Determines the number of characters that would be within the string equivalent of INT_MAX.
 #define INT_MAX_CHARS 11
@@ -25,47 +37,37 @@
  * \param length The maximum size of the string
  * \param stream The input stream to read from
  */
-size_t getStr(char **str, const char delim, const size_t length, FILE *stream)
+size_t getStr(char **str, const char delim, const size_t max_length, FILE *stream)
 {
-    // Validating the pointer to the string
     if (str == NULL)
     {
         fputs("\ngetStr(): Invalid pointer-to-pointer-to-char provided; No reading occurred\n", stderr);
         return 0;
     }
 
-    // Validating the length argument for the string
-    if (length == 0)
+    if (max_length == 0)
     {
-        fprintf(stderr, "\ngetStr(): Invalid string length (%llu); No reading occurred\n", length);
+        fprintf(stderr, "\ngetStr(): Invalid string length (%llu); No reading occurred\n", max_length);
         return 0;
     }
 
-    // Validating that the input stream is, well, valid
     if (stream == NULL)
     {
-        fputs("\ngetStr(): Invalid stream provided; No reading occurred\n", stderr);
+        fputs("\ngetStr(): Invalid input stream provided; No reading occurred\n", stderr);
         return 0;
     }
 
-    // Ensuring stream isn't at EOF here so that we don't go through all the other stuff below
-    // just to return 0 anyway
     if (feof(stream))
         return 0;
 
-    // Reading from stream into str
     // "length + 1" to ensure there is always space for a null terminator
-    char buffer[length + 1];
+    char buffer[max_length + 1];
     size_t i = 0;
-    for (; i < length; ++i)
+    for (; i < max_length; ++i)
     {
         buffer[i] = getc(stream);
         if (buffer[i] == delim || buffer[i] == EOF)
-        {
-            // Incrementing 'i' since we count the null terminator in the string's returned length
-            buffer[i++] = '\0';
             break;
-        }
     }
 
     // If nothing meaningful was read then we can just return 0, leaving the 'str' argument untouched.
@@ -74,16 +76,13 @@ size_t getStr(char **str, const char delim, const size_t length, FILE *stream)
     if (buffer[0] == '\0')
         return 0;
 
-    // Appending a null terminator and adding it to the string's returned length, 'i', if not all of
-    // the input within 'stream' was read
-    if (i == length)
-        buffer[i++] = '\0';
+    // Incrementing 'i' since we count the null terminator in the string's returned length
+    buffer[i++] = '\0';
 
     // Allocating memory for 'str' if the user hadn't already allocated for it themselves
     if (*str == NULL)
     {
         *str = malloc(sizeof(buffer));
-        // Allocation failure insurance
         if (*str == NULL)
         {
             fputs("\ngetStr(): malloc() failure; No reading occurred\n", stderr);
@@ -93,26 +92,6 @@ size_t getStr(char **str, const char delim, const size_t length, FILE *stream)
     strcpy_s(*str, sizeof(buffer), buffer);
 
     return i;
-}
-
-/*
- * Returns the index of the first occurence of 'needle' from the median of the
- * given haystack.
- *
- * Tends to return higher value indexes rather than lower value indexes.
- */
-void *lsearch_mid(const void *const needle, const void *const haystack, const size_t haystack_size, int cmp(const void *const a, void const *const b))
-{
-    for (long i = 0; i <= (long long)haystack_size / 2; i++)
-    {
-        const void *const current_ptr = haystack + haystack_size / 2;
-        if (cmp((current_ptr + i), needle) == 0)
-            return (void *)current_ptr + i;
-
-        if (cmp((current_ptr + i), needle) == 0)
-            return (void *)current_ptr - i;
-    }
-    return NULL;
 }
 
 /*
@@ -149,23 +128,26 @@ int strToInt(const char *str, int *const num)
         fputs("\nstrToInt(): 'str' is NULL; No conversion occurred", stderr);
         return ERRCODE_BAD_PTR;
     }
+
     if (num == NULL)
     {
         fputs("\nstrToInt(): 'num' is NULL; No conversion occurred", stderr);
         return ERRCODE_BAD_PTR;
     }
 
-    const static int INT_MAX_OVERFLOW_CHK = 147483647;
-    const static int INT_MIN_OVERFLOW_CHK = INT_MAX_OVERFLOW_CHK + 1;
-    const static int MAX_PLACE_VALUE = 1000000000;
+    const static unsigned MAX_PLACE_VALUE = 1000000000;
 
     const char containsSign = (*str == '-' || *str == '+');
     const char isNegative = (*str == '-');
+
     const char *const STR_PTR_START = str + containsSign;
     const char *const STR_PTR_END = str + strlen(str) - 1; // "strlen(str) - 1" to discount the null terminator
 
-    int tempNum = 0; // This will replace 'num' upon the function's successful completion
-    unsigned placeValue = 1;
+    if (STR_PTR_END - STR_PTR_START > INT_MAX_CHARS)
+        return ERRCODE_BAD_INPUT;
+
+    unsigned int tempNum = 0; // This will replace 'num' upon the function's successful completion
+    unsigned int placeValue = 1;
 
     // Iterating over the string in reverse allows for the correct place values to be assigned with
     // as little hassle as possible
@@ -180,40 +162,114 @@ int strToInt(const char *str, int *const num)
         if (currentDigit == 0 && placeValue < MAX_PLACE_VALUE)
             continue;
 
-        if (placeValue != MAX_PLACE_VALUE)
-            tempNum += currentDigit * placeValue;
-        // Safely handling anything that might approach INT_MAX or INT_MIN
-        else if (currentDigit <= 2)
+        tempNum += currentDigit * placeValue;
+
+        if (tempNum >= (unsigned int)INT_MAX || tempNum / placeValue < 1)
         {
-            // Before we add the final digit, we check to see if doing so would cause an overflow
-            if (tempNum - INT_MAX_OVERFLOW_CHK <= 0)
+            if (tempNum == (unsigned int)INT_MAX)
             {
-                tempNum += currentDigit * placeValue;
                 break;
             }
-            // Handling the edge case of INT_MIN being greater than INT_MAX by 1
-            if (isNegative && tempNum - INT_MIN_OVERFLOW_CHK == 0)
+            if (tempNum == (unsigned int)INT_MIN * -1 && isNegative)
             {
                 *num = INT_MIN;
                 return ERRCODE_SUCCESS;
             }
-            // Catching overflow with an undefined return error code
-            return ERRCODE_GENERAL;
-        }
-        else
             return ERRCODE_BAD_INPUT;
+        }
     }
 
-    // If 'str' is still in its initialized value then the loop must have hit an invalid character
-    // upon the first iteration, so we leave 'num' alone as per the function's guarantee and exit
-    if (STR_PTR_END - str == STR_PTR_END - STR_PTR_START - 1)
-        return ERRCODE_GENERAL;
+    *num = tempNum;
 
     if (isNegative)
-        tempNum *= -1;
-
-    *num = tempNum;
+        *num *= -1;
     return ERRCODE_SUCCESS;
+}
+
+// Returns a random string of unsigned chars using random_vis_uchar().
+unsigned char *random_ustring(const unsigned char min, const unsigned char max, const size_t length)
+{
+    if (max < min)
+    {
+        fprintf_s(stderr, "generate_test_ustring(): Invalid values for max and min values (%u is NOT GREATER THAN %u)\n", max, min);
+        return NULL;
+    }
+
+    if (length == 0)
+    {
+        fprintf_s(stderr, "generate_test_ustring(): Invalid length: %llu", length);
+        return NULL;
+    }
+
+    // (length + 1) to account for the null terminator
+    unsigned char *str = malloc(length + 1);
+
+    if (str == NULL)
+    {
+        fputs("generate_test_ustring(): malloc() failure; returning NULL\n", stderr);
+        return NULL;
+    }
+
+    for (size_t i = 0; i < length; i++)
+        str[i] = random_uchar_range(min, max);
+
+    str[length] = '\0';
+
+    return str;
+}
+
+// Returns a random string of signed chars using random_vis_uchar().
+char *random_string(const char min, const char max, const size_t length)
+{
+    if (max < min)
+    {
+        fprintf_s(stderr, "generate_test_ustring(): Invalid values for max and min values (%u is NOT GREATER THAN %u)\n", max, min);
+        return NULL;
+    }
+
+    // (length + 1) to account for the null terminator
+    char *str = malloc(length + 1);
+    if (str == NULL)
+    {
+        fputs("generate_test_string(): malloc() failure; returning NULL\n", stderr);
+        return NULL;
+    }
+
+    for (size_t i = 0; i < length; i++)
+        str[i] = random_uchar_range(min, max);
+
+    str[length] = '\0';
+
+    return str;
+}
+
+// Returns a random string of alphabetical chararacters using random_vis_uchar().
+char *random_string_alphabetical(const size_t length)
+{
+    if (length == 0)
+    {
+        fprintf_s(stderr, "generate_test_string_alphabetic(): Invalid length: %llu", length);
+        return 0;
+    }
+
+    // (length + 1) to account for the null terminator
+    char *str = malloc(length + 1);
+    if (str == NULL)
+    {
+        fprintf_s(stderr, "generate_test_string(): malloc() failure; returning NULL\n");
+        return NULL;
+    }
+
+    for (size_t i = 0; i < length; i++)
+    {
+        if (random_bool())
+            str[i] = random_uchar_range('a', 'z');
+        else
+            str[i] = random_uchar_range('A', 'Z');
+    }
+    str[length] = '\0';
+
+    return str;
 }
 
 /*
