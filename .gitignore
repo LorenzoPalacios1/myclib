@@ -1,3 +1,4 @@
 *.exe
 *.s
 a.c
+.vscode

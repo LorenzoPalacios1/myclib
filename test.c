@@ -119,7 +119,7 @@ static clock_t (*const tests[NUM_TESTS])(void) = {charToIntTests};
 static int *tests_prompt(void)
 {
     puts("Your test choices are:");
-    for (int i = 0; i < NUM_TESTS; i++)
+    for (unsigned i = 0; i < NUM_TESTS; i++)
         printf_s("%d. %s\n", i, test_names[i]);
 
     puts(

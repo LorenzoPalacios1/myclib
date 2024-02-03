@@ -1,27 +1,27 @@
-#if !defined _INC_STDLIB
+#ifndef _INC_STDLIB
 #include <stdlib.h>
 #endif
 
-#if !defined _INC_STRING
+#ifndef _INC_STRING
 #include <string.h>
 #endif
 
-#if !defined __CLANG_LIMITS_H || !defined _GCC_LIMITS_H_
+#if (!defined __CLANG_LIMITS_H || !defined _GCC_LIMITS_H_)
 #include <limits.h>
 #endif
 
-#if !defined _INC_MYBASICS
+#ifndef _INC_MYBASICS
 #include "MyBasics.h"
 #endif
 
 // Determines the number of characters that would be within the string equivalent of INT_MAX.
-#define INT_MAX_CHARS 11
+#define INT_MAX_CHARS (11)
 
 /*
  * Writes to the first argument, str, from stream until reading the delimiter
  * character, or upon the string reaching the specified length.
  *
- * \returns Returns the length of the string INCLUDING the null terminator, or 0 if nothing was written.
+ * \returns Returns the length of the string discounting the null terminator, or 0 if nothing was written.
  *
  * \note If this function returns 0, the string will be left unmodified (that is, nothing will be written).
  *
@@ -34,26 +34,26 @@
  *
  * \param str The pointer to string that will be written to
  * \param delim The delimiter character
- * \param length The maximum size of the string
+ * \param max_length The maximum size of the string
  * \param stream The input stream to read from
  */
-size_t getStr(char **const str, const char delim, const size_t length, FILE *const stream)
+size_t getStr(char **const str, const char delim, const size_t max_length, FILE *const stream)
 {
     if (str == NULL)
     {
-        fputs("\ngetStr(): Invalid pointer-to-pointer-to-char provided; No reading occurred\n", stderr);
+        fputs("\ngetStr(): Invalid pointer-to-pointer-to-char provided; No reading occurred", stderr);
         return 0;
     }
 
-    if (length == 0)
+    if (max_length == 0)
     {
-        fprintf(stderr, "\ngetStr(): Invalid string length (%llu); No reading occurred\n", length);
+        fprintf(stderr, "\ngetStr(): Invalid string length (%llu); No reading occurred", max_length);
         return 0;
     }
 
     if (stream == NULL)
     {
-        fputs("\ngetStr(): Invalid input stream provided; No reading occurred\n", stderr);
+        fputs("\ngetStr(): Invalid input stream provided; No reading occurred", stderr);
         return 0;
     }
 
@@ -61,9 +61,9 @@ size_t getStr(char **const str, const char delim, const size_t length, FILE *con
         return 0;
 
     // "length + 1" to ensure there is always space for a null terminator
-    char buffer[length + 1];
+    char buffer[max_length + 1];
     size_t i = 0;
-    for (; i < length; ++i)
+    for (; i < max_length; ++i)
     {
         buffer[i] = getc(stream);
         if (buffer[i] == delim || buffer[i] == EOF)
@@ -76,19 +76,19 @@ size_t getStr(char **const str, const char delim, const size_t length, FILE *con
     if (buffer[0] == '\0')
         return 0;
 
-    // Incrementing 'i' since we count the null terminator in the string's returned length
-    buffer[i++] = '\0';
+    buffer[i] = '\0';
 
     // Allocating memory for 'str' if the user hadn't already allocated for it themselves
     if (*str == NULL)
     {
-        *str = malloc(sizeof(buffer));
+        *str = malloc(max_length + 1);
         if (*str == NULL)
         {
-            fputs("\ngetStr(): malloc() failure; No reading occurred\n", stderr);
+            fputs("\ngetStr(): malloc() failure; No reading occurred", stderr);
             return 0;
         }
     }
+
     strcpy_s(*str, sizeof(buffer), buffer);
 
     return i;
@@ -135,41 +135,40 @@ int strToInt(const char *str, int *const num)
         return ERRCODE_BAD_PTR;
     }
 
-    const static unsigned MAX_PLACE_VALUE = 1000000000;
+    const unsigned int MAX_PLACE_VALUE = 1000000000;
 
-    const char containsSign = (*str == '-' || *str == '+');
-    const char isNegative = (*str == '-');
+    const bool containsSign = (*str == '-' || *str == '+');
+    const bool isNegative = (*str == '-');
 
-    const char *const STR_PTR_START = str + containsSign;
-    const char *const STR_PTR_END = str + strlen(str) - 1; // "strlen(str) - 1" to discount the null terminator
+    const size_t STARTING_INDEX = containsSign;
+    const size_t ENDING_INDEX = strlen(str) - 1; // "strlen(str) - 1" to discount the null terminator
 
-    if (STR_PTR_END - STR_PTR_START > INT_MAX_CHARS)
+    /* If there are more characters, valid or not, than an int can hold. */
+    if (ENDING_INDEX - STARTING_INDEX > INT_MAX_CHARS)
         return ERRCODE_BAD_INPUT;
 
     unsigned int tempNum = 0; // This will replace 'num' upon the function's successful completion
     unsigned int placeValue = 1;
 
     // Iterating over the string in reverse allows for the correct place values to be assigned with
-    // as little hassle as possible
-    for (str = STR_PTR_END; str >= STR_PTR_START; --str, placeValue *= (placeValue == MAX_PLACE_VALUE) ? 1 : 10)
+    // as little hassle as possible.
+    for (unsigned short i = containsSign; i < ENDING_INDEX; i--, placeValue *= 10)
     {
         const char currentDigit = charToInt(*str);
 
         if (currentDigit == -1)
             return ERRCODE_BAD_INPUT;
 
-        // We can skip any values of 0
-        if (currentDigit == 0 && placeValue < MAX_PLACE_VALUE)
+        // We can skip over any values of 0.
+        if (currentDigit == 0)
             continue;
 
         tempNum += currentDigit * placeValue;
 
-        if (tempNum >= (unsigned int)INT_MAX || tempNum / placeValue < 1)
+        if (tempNum >= INT_MAX || tempNum / placeValue < 1)
         {
-            if (tempNum == (unsigned int)INT_MAX)
-            {
+            if (tempNum == INT_MAX)
                 break;
-            }
             if (tempNum == (unsigned int)INT_MIN * -1 && isNegative)
             {
                 *num = INT_MIN;
@@ -187,17 +186,17 @@ int strToInt(const char *str, int *const num)
 }
 
 // Returns a random string of unsigned chars using random_vis_uchar().
-unsigned char *random_ustring(const unsigned char min, const unsigned char max, const size_t length)
+unsigned char *randomUnsignedString(const unsigned char min, const unsigned char max, const size_t length)
 {
     if (max < min)
     {
-        fprintf_s(stderr, "generate_test_ustring(): Invalid values for max and min values (%u is NOT GREATER THAN %u)\n", max, min);
+        fprintf(stderr, "\ngenerate_test_ustring(): Invalid values for range (%u is NOT GREATER THAN %u)", max, min);
         return NULL;
     }
 
     if (length == 0)
     {
-        fprintf_s(stderr, "generate_test_ustring(): Invalid length: %llu", length);
+        fprintf(stderr, "\ngenerate_test_ustring(): Invalid length: %llu", length);
         return NULL;
     }
 
@@ -206,12 +205,12 @@ unsigned char *random_ustring(const unsigned char min, const unsigned char max, 
 
     if (str == NULL)
     {
-        fputs("generate_test_ustring(): malloc() failure; returning NULL\n", stderr);
+        fputs("\ngenerate_test_ustring(): malloc() failure; returning NULL", stderr);
         return NULL;
     }
 
     for (size_t i = 0; i < length; i++)
-        str[i] = random_uchar_range(min, max);
+        str[i] = randomUnsignedCharInRange(min, max);
 
     str[length] = '\0';
 
@@ -219,11 +218,11 @@ unsigned char *random_ustring(const unsigned char min, const unsigned char max, 
 }
 
 // Returns a random string of signed chars using random_vis_uchar().
-char *random_string(const char min, const char max, const size_t length)
+char *randomString(const char min, const char max, const size_t length)
 {
     if (max < min)
     {
-        fprintf_s(stderr, "generate_test_ustring(): Invalid values for max and min values (%u is NOT GREATER THAN %u)\n", max, min);
+        fprintf(stderr, "\ngenerate_test_ustring(): Invalid values for range (%u is NOT GREATER THAN %u)", max, min);
         return NULL;
     }
 
@@ -231,12 +230,12 @@ char *random_string(const char min, const char max, const size_t length)
     char *str = malloc(length + 1);
     if (str == NULL)
     {
-        fputs("generate_test_string(): malloc() failure; returning NULL\n", stderr);
+        fputs("\ngenerate_test_string(): malloc() failure; returning NULL", stderr);
         return NULL;
     }
 
     for (size_t i = 0; i < length; i++)
-        str[i] = random_uchar_range(min, max);
+        str[i] = randomUnsignedCharInRange(min, max);
 
     str[length] = '\0';
 
@@ -244,28 +243,29 @@ char *random_string(const char min, const char max, const size_t length)
 }
 
 // Returns a random string of alphabetical chararacters using random_vis_uchar().
-char *random_string_alphabetical(const size_t length)
+char *randomAlphabeticalString(const size_t length)
 {
     if (length == 0)
     {
-        fprintf_s(stderr, "generate_test_string_alphabetic(): Invalid length: %llu", length);
-        return 0;
+        fprintf(stderr, "\ngenerate_test_string_alphabetic(): Invalid length: %llu", length);
+        return NULL;
     }
 
     // (length + 1) to account for the null terminator
     char *str = malloc(length + 1);
     if (str == NULL)
     {
-        fprintf_s(stderr, "generate_test_string(): malloc() failure; returning NULL\n");
+        fputs("\ngenerate_test_string(): malloc() failure; returning NULL", stderr);
         return NULL;
     }
 
     for (size_t i = 0; i < length; i++)
     {
-        if (random_bool())
-            str[i] = random_uchar_range('a', 'z');
+        /* Don't use randomBool() so as to not magically drain caches if they are enabled. */
+        if (rand() & 1)
+            str[i] = randomUnsignedCharInRange('a', 'z');
         else
-            str[i] = random_uchar_range('A', 'Z');
+            str[i] = randomUnsignedCharInRange('A', 'Z');
     }
     str[length] = '\0';
 
@@ -273,17 +273,15 @@ char *random_string_alphabetical(const size_t length)
 }
 
 /*
- * Reads up to 11 numerical characters (including a preceding dash) and parses
- * them, writing the proper int equivalent (if any) to 'num'.
+ * Parses up to 11 numerical characters (including a preceding sign) and writes the
+ * `int` equivalent (if any) to `num`.
  *
- * Stops upon reading a non-numerical character
+ * Stops upon reading a non-numerical character.
  *
- * Writes the parsed line as an int to 'num'.
- *
- * Returns 1 if the passed arguments were valid, but no characters in the stream
+ * \returns `1` if the passed arguments were valid, but no characters in the stream
  * were parsable, or if type int was overflowed.
  */
-int readInt(int *const num, FILE *stream)
+int readInt(int *const num, FILE *const stream)
 {
     if (num == NULL)
     {
@@ -303,21 +301,21 @@ int readInt(int *const num, FILE *stream)
         return ERRCODE_FILE_AT_EOF;
     }
 
-    // Buffer size of 12 (for Windows running on my Surface Go) since a typical int can hold 10 numbers
-    // including a dash in the case of negative values for a total of 11 characters (INT_MAX_CHARS).
-    // Then we need to account for the null terminator, so we add 1 to INT_MAX_CHARS.
+    /*
+     * `INT_MAX_CHARS + 1` to account for a null terminator.
+     *
+     * Additionally, this buffer can be static since its state is generally irrelevant and
+     * allows for the avoidance of malloc() and free() nonsense when passed as a pointer to
+     * strToInt().
+     */
     static char buffer[INT_MAX_CHARS + 1];
 
-    int i = -1;
-    // We count a single trailing dash as a valid character, so we increment 'i' just as we would for a digit
-    if ((buffer[0] = getc(stream)) == '-')
-        ++i;
-    else
-        ungetc(buffer[0], stream);
-
-    while (i < INT_MAX_CHARS && isNumerical((buffer[++i] = getc(stream))))
-        ;
-
+    unsigned short i = 0;
+    for (; i < INT_MAX_CHARS; i++)
+    {
+        if ((buffer[i] = getc(stream)) == EOF)
+            return ERRCODE_FILE_REACHED_EOF;
+    }
     buffer[i] = '\0';
 
     return strToInt(buffer, num);
