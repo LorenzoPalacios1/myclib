@@ -23,13 +23,13 @@
 #define VIS_CHAR_END ('' - 1)
 
 /*
- * Set to `true` to prevent certain random generator methods from generating
+ * Set to `true` to allow certain random generator methods from generating
  * a cache of random data as needed and returning elements from the cache.
  */
 #define ALLOW_RANDOM_GEN_CACHING (true)
 
 /* Determines the number of elements (not bytes) that each  cache. */
-#if (ALLOW_RANDOM_GEN_CACHING != 0)
+#if (ALLOW_RANDOM_GEN_CACHING == true)
 #define CACHE_SIZE ((size_t)256)
 #endif
 
