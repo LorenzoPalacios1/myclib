@@ -7,21 +7,18 @@
 #include <stdlib.h>
 
 #include "MyBasics.h"
+#include "array/array.h"
 #include "randomgen/randomgen.h"
 
-#define ERRCODE_SUCCESS (0x0) /* Denotes a successful execution. */
-#define ERRCODE_GENERAL \
-  (0x1) /* An undefined status code; consult the function's documentation. */
-#define ERRCODE_BAD_PTR (0x2) /* Denotes a bad pointer argument. */
-#define ERRCODE_BAD_FILE \
-  (0x3) /* Denotes a bad or `NULL` pointer to a `FILE` argument. */
-#define ERRCODE_FILE_AT_EOF \
-  (0x4) /* The passed `FILE` is at `EOF` *before* any reading occurred. */
-#define ERRCODE_BAD_INPUT                                                      \
-  (0x5) /* Denotes a bad string (eg. passing alphabetical chars to strToInt()) \
-         */
-#define ERRCODE_FILE_REACHED_EOF \
-  (0x6) /* The function reached `EOF` during execution. */
+/* clang-format off */
+#define SUCCESS          (0) /* Denotes a successful execution. */
+#define GENERIC_FAILURE  (SUCCESS + 1) /* An undefined status code; consult the function's documentation. */
+#define BAD_PTR          (GENERIC_FAILURE + 1) /* Denotes a bad pointer argument. */
+#define BAD_FILE         (BAD_PTR + 1) /* Denotes a bad or `NULL` pointer to a `FILE` argument. */
+#define FILE_AT_EOF      (BAD_FILE + 1) /* The passed `FILE` is at `EOF` *before* any reading occurred. */
+#define FILE_REACHED_EOF (FILE_AT_EOF + 1) /* The function reached `EOF` during execution. */
+#define MALLOC_FAILURE   (FILE_REACHED_EOF + 1) /* A call to `malloc()` failed to return a valid pointer. */
+/* clang-format on */
 
 /*
  * Writes to the first argument, str, from stream until reading the delimiter
@@ -88,17 +85,4 @@ inline bool isNumerical(const char number) {
 inline bool isAlphaNumerical(const char item) {
   return (isAlphabetical(item) || isNumerical(item));
 }
-
-/*
- * Returns the passed character as an integer singleton (0-9), if possible.
- *
- * If the passed character does not represent an integer, this function returns
- * `-1`.
- */
-inline int charToInt(const char num) {
-  if (isNumerical(num)) return num - '0';
-  return -1;
-}
-
-int readInt(int *const num, FILE *stream);
 #endif

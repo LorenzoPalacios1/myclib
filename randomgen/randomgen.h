@@ -1,5 +1,5 @@
-#ifndef RANDOMS_H
-#define RANDOMS_H
+#ifndef RANDOMGEN_H
+#define RANDOMGEN_H
 
 #include <limits.h>
 #include <stdbool.h>
