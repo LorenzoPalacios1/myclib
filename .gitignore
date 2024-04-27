@@ -1,4 +1,10 @@
+# File Types
 *.exe
 *.s
-a.c
+
+
+# Specific Files
+
+# Folders
 .vscode
+exe
