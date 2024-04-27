@@ -35,7 +35,7 @@
  * Returns a single `int` from `rand()` within the specified range (inclusive).
  * Always returns `0` if (`max` < `min`).
  */
-static inline int randomInt(const int min, const int max);
+int randomInt(const int min, const int max);
 
 /*
  * Returns either `true` or `false`.
@@ -62,20 +62,20 @@ uint8_t *randomUnsignedString(const uint8_t min, const uint8_t max,
  *
  * If caching is enabled, the first call to this function will stock the cache.
  */
-static inline unsigned char randomVisibleUnsignedChar(void);
+unsigned char randomVisibleUnsignedChar(void);
 
 /*
  * Returns a single visible `signed char` from `rand()`.
  *
  * If caching is enabled, the first call to this function will stock the cache.
  */
-static inline unsigned char randomVisibleChar(void);
+unsigned char randomVisibleChar(void);
 
 /*
  * Returns a single `unsigned char` from `rand()` whose value is between `min`
  * and `max` (inclusive).
  */
-static inline unsigned char randomUnsignedCharInRange(const unsigned char min,
+unsigned char randomUnsignedCharInRange(const unsigned char min,
                                                       const unsigned char max);
 
 #endif

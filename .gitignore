@@ -1,7 +1,8 @@
 # File Types
 *.exe
 *.s
-
+*.pch
+*.o
 
 # Specific Files
 

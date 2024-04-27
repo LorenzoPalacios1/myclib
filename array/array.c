@@ -14,7 +14,7 @@ array *create_array(const void *const data, const size_t elem_size,
 
 void *get_elem(const array *const arr, const size_t index) {
   if (index >= arr->num_elems) return NULL;
-  return arr->data + (arr->indexing_offset * index);
+  return (char*)arr->data + (arr->indexing_offset * index);
 }
 
 void delete_array(array *arr) {
