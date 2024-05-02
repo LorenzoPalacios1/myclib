@@ -24,7 +24,9 @@ void delete_array(array *arr) {
 }
 
 void zero_and_delete_array(array *arr) {
+  free(arr->data);
   memset(arr->data, 0, arr->allocated_size);
   memset(arr, 0, sizeof(array));
-  delete_array(arr);
+  free(arr);
+  arr = NULL;
 }
