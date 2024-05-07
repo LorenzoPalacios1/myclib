@@ -6,21 +6,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-unsigned char *randomUnsignedString(const unsigned char min,
-                                    const unsigned char max,
-                                    const size_t length) {
+uint8_t *randomUnsignedString(const uint8_t min, const uint8_t max,
+                              const size_t length) {
   if (max < min) {
     fprintf(stderr,
-            "\ngenerate_test_ustring(): Invalid values for range (%u is NOT "
-            "GREATER THAN %u)",
+            "\ngenerate_test_ustring(): Invalid values for range"
+            "(%u is NOT GREATER THAN %u)",
             max, min);
     return NULL;
   }
-  if (length == 0)
-    return NULL;
+  if (length == 0) return NULL;
 
   /* (length + 1) to account for the null terminator. */
-  unsigned char *str = malloc(length + 1);
+  uint8_t *str = malloc(length + 1);
   if (str == NULL) {
     fputs("\ngenerate_test_ustring(): malloc() failure; returning NULL",
           stderr);
@@ -84,11 +82,11 @@ char *randomAlphabeticalString(const size_t length) {
   return str;
 }
 
-unsigned char randomVisibleChar(void) {
+uint8_t randomVisibleChar(void) {
 #if (!ALLOW_RANDOM_GEN_CACHING)
   return randomInt(VIS_CHAR_START, CHAR_MAX);
 #else
-  static unsigned char cache[CACHE_SIZE];
+  static uint8_t cache[CACHE_SIZE];
   static size_t iterator = CACHE_SIZE;
 
   if (iterator == CACHE_SIZE) {
@@ -100,8 +98,7 @@ unsigned char randomVisibleChar(void) {
 #endif
 }
 
-unsigned char randomUnsignedCharInRange(const unsigned char min,
-                                        const unsigned char max) {
+uint8_t randomUnsignedCharInRange(const uint8_t min, const uint8_t max) {
   if (max < min) {
     fprintf(stderr,
             "random_uchar_range(): Invalid values for max and min values (%u "
@@ -112,11 +109,11 @@ unsigned char randomUnsignedCharInRange(const unsigned char min,
   return randomInt(min, max);
 }
 
-unsigned char randomVisibleUnsignedChar(void) {
+uint8_t randomVisibleUnsignedChar(void) {
 #if (!ALLOW_RANDOM_GEN_CACHING)
   return randomInt(VIS_CHAR_START, UCHAR_MAX);
 #else
-  static unsigned char cache[CACHE_SIZE];
+  static uint8_t cache[CACHE_SIZE];
   static size_t iterator = CACHE_SIZE;
 
   if (iterator == CACHE_SIZE) {
@@ -154,7 +151,6 @@ bool randomBool(void) {
     }
     cache_iterator = 0;
   }
-  /* bit_iterator shifts 1 by a certain number of bits so as to  */
   return cache[cache_iterator] & (1 << bit_iterator++);
 #endif
 }

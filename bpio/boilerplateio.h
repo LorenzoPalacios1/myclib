@@ -12,10 +12,11 @@
  *
  * \note If this function returns 0, the string will be left unmodified (that
  * is, nothing will be written).
+ * 
+ * \note A null terminator will replace the delimiter where it would have
+ * occurred within the string.
  *
- * \note A null terminator will replace the delimiter within the string.
- *
- * \note Otherwise, if 'length' characters were written before the delimiter was
+ * \note If 'length' characters were written before the delimiter was
  * read, a null terminator will be appended to the end of the string if no
  * delimiter was read or EOF was not met.
  *
