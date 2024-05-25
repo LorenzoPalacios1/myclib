@@ -45,8 +45,12 @@ string_t *findReplace(string_t *const haystack, const string_t *const needle,
     /* Insert the replacement string */
     strcpy(buffer + needleIndex, replacement->data);
     /* Copy chars after the point of insertion */
-    strcpy(buffer + needleIndex + replacement->length,
-          haystack->data + needleIndex + needle->length);
+    if (needle->length > replacement->length)
+      strcpy(buffer + needleIndex + replacement->length,
+             haystack->data + needleIndex + needle->length);
+    else
+      strcpy(buffer + needleIndex + replacement->length,
+             haystack->data + needleIndex + replacement->length);
     haystack->length += replacement->length - needle->length;
     haystack->data = buffer;
   }
