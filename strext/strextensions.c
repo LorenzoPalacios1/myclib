@@ -52,6 +52,7 @@ string_t *findReplace(string_t *const haystack, const string_t *const needle,
       strcpy(buffer + needleIndex + replacement->length,
              haystack->data + needleIndex + replacement->length);
     haystack->length += replacement->length - needle->length;
+    buffer[haystack->length] = '\0';
     haystack->data = buffer;
   }
   return haystack;
