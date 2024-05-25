@@ -2,38 +2,53 @@
 
 #include <string.h>
 
-typedef struct string_t {
-  char *data;
-  size_t length;
-  size_t allocated_size;
-  double reallocation_multiplier;
-} string_t;
+/* In bytes. */
+#define BASE_ALLOCATION (512)
+#define BASE_REALLOCATION_MULITPLIER (2)
+
+string_t *newString(const char *const raw_str) {
+  string_t *str = malloc(sizeof(string_t));
+  str->allocated_bytes = BASE_ALLOCATION;
+  str->reallocation_multiplier = BASE_REALLOCATION_MULITPLIER;
+
+  char *buffer = malloc(str->allocated_bytes);
+  if (!buffer) return NULL;
+
+  size_t i = 0;
+  for (; raw_str[i]; i++) {
+    if (i == str->allocated_bytes) {
+      str->allocated_bytes *= str->reallocation_multiplier;
+      buffer = realloc(buffer, str->allocated_bytes);
+      if (!buffer) return NULL;
+    }
+    buffer[i] = raw_str[i];
+  }
+  buffer[i] = '\0';
+  str->data = buffer;
+  str->length = i;
+  return str;
+}
 
 string_t *findReplace(string_t *const haystack, const string_t *const needle,
-                      const string_t *const replacer) {
+                      const string_t *const replacement) {
   const ptrdiff_t needleIndex =
       strstr(haystack->data, needle->data) - haystack->data;
   if (needleIndex >= 0) {
-    const size_t BYTES_REQUIRED = haystack->length + replacer->length + 1;
-    char *buffer;
-    if (BYTES_REQUIRED > haystack->allocated_size) {
-      buffer = malloc(BYTES_REQUIRED);
-      haystack->allocated_size =
+    const size_t BYTES_REQUIRED =
+        haystack->length + replacement->length - needle->length;
+    char *buffer = haystack->data;
+    if (BYTES_REQUIRED > haystack->allocated_bytes) {
+      haystack->allocated_bytes =
           BYTES_REQUIRED * haystack->reallocation_multiplier;
-    } else {
-      buffer = haystack->data;
+      buffer = realloc(haystack->data, haystack->allocated_bytes);
     }
-    /* Copy chars up to the point of insertion */
-    strncpy(buffer, haystack->data, needleIndex);
-    /* Insert the replacing string */
-    strcpy(buffer + needleIndex, replacer->data);
+    /* Insert the replacement string */
+    strcpy(buffer + needleIndex, replacement->data);
     /* Copy chars after the point of insertion */
-    strcpy(buffer + needleIndex + replacer->length,
-           haystack->data + needleIndex + needle->length);
-    buffer[haystack->length + replacer->length] = '\0';
-    haystack->length += replacer->length - needle->length;
+    strcpy(buffer + needleIndex + replacement->length,
+          haystack->data + needleIndex + needle->length);
+    haystack->length += replacement->length - needle->length;
     haystack->data = buffer;
-    return haystack;
   }
   return haystack;
 }

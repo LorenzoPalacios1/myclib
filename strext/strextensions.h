@@ -2,6 +2,14 @@
 
 #include "../MyBasics.h"
 
-char *findAndReplace(char *const haystack, const size_t HAYSTACK_LEN,
-                     const char *const needle, const size_t NEEDLE_LEN,
-                     const char *const replacer, const size_t REPLACER_LEN);
+typedef struct string_t {
+  char *data;
+  size_t length;
+  size_t allocated_bytes;
+  double reallocation_multiplier;
+} string_t;
+
+string_t *findReplace(string_t *const haystack, const string_t *const needle,
+                  const string_t *const replacer);
+
+string_t *newString(const char *const raw_str);
