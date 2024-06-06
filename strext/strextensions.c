@@ -1,21 +1,12 @@
 #include "strextensions.h"
 
+#include <stdio.h>
 #include <string.h>
 
 #define BASE_ALLOCATION (2048) /* In bytes. */
 #define BASE_REALLOCATION_MULITPLIER (2)
 
-/* clang-format off */
-#define newString(arg)                                \
-  _Generic((arg),                                     \
-  char *: new_string_from_chars(arg)                  \
-  FILE *: new_string_from_input_stream(arg)           \
-  int: new_string_preallocated(arg)                   \
-  size_t: new_string_preallocated(arg)                \
-  default: NULL)
-/* clang-format on */
-
-static string_t *new_string_from_chars(const char *const raw_text) {
+string_t *string_from_chars(const char *const raw_text) {
   string_t *str_obj = malloc(sizeof(string_t));
   char *str_contents = malloc(BASE_ALLOCATION);
   if (!str_obj || !str_contents) return NULL;
@@ -37,7 +28,7 @@ static string_t *new_string_from_chars(const char *const raw_text) {
   return str_obj;
 }
 
-static string_t *new_string_preallocated(const size_t size_in_bytes) {
+string_t *string_preallocated(const size_t size_in_bytes) {
   string_t *str_obj = malloc(sizeof(string_t));
   char *str_contents = malloc(size_in_bytes);
   if (!str_obj || !str_contents) return NULL;
@@ -85,6 +76,7 @@ string_t *findReplace(string_t *const haystack, const string_t *const needle,
         haystack->allocated_bytes =
             BYTES_REQUIRED * haystack->reallocation_multiplier;
         hay = realloc(hay, haystack->allocated_bytes);
+        if (!hay) return haystack;
       }
     }
     char suffixed_chars[*HAY_LEN - needle_index - NEEDLE_LEN];
@@ -100,6 +92,16 @@ string_t *findReplace(string_t *const haystack, const string_t *const needle,
   return haystack;
 }
 
-static string_t *string_from_input_stream(FILE *const stream) {
+string_t *string_from_input_stream(FILE *const stream) {
+  string_t *new_str = newString(BASE_ALLOCATION);
 
+  char c = getc(stream);
+  for (size_t i = 0; c && c != EOF; i ++) {
+    if (i == new_str->allocated_bytes) {
+
+    }
+    new_str->data[i] = c;
+    c = getc(stream);
+  }
+  return new_str;
 }
