@@ -15,5 +15,3 @@ string_t *findReplace(string_t *const haystack, const string_t *const needle,
 /* To be added. */
 string_t *findReplaceAll(string_t *const haystack, const string_t *const needle,
                          const string_t *const replacement);
-
-string_t *newString(const char *const raw_str);

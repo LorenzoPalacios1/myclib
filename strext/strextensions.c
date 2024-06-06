@@ -5,7 +5,17 @@
 #define BASE_ALLOCATION (2048) /* In bytes. */
 #define BASE_REALLOCATION_MULITPLIER (2)
 
-string_t *new_string_from_chars(const char *const raw_text) {
+/* clang-format off */
+#define newString(arg)                                \
+  _Generic((arg),                                     \
+  char *: new_string_from_chars(arg)                  \
+  FILE *: new_string_from_input_stream(arg)           \
+  int: new_string_preallocated(arg)                   \
+  size_t: new_string_preallocated(arg)                \
+  default: NULL)
+/* clang-format on */
+
+static string_t *new_string_from_chars(const char *const raw_text) {
   string_t *str_obj = malloc(sizeof(string_t));
   char *str_contents = malloc(BASE_ALLOCATION);
   if (!str_obj || !str_contents) return NULL;
@@ -27,7 +37,7 @@ string_t *new_string_from_chars(const char *const raw_text) {
   return str_obj;
 }
 
-string_t *new_string_preallocated(const size_t size_in_bytes) {
+static string_t *new_string_preallocated(const size_t size_in_bytes) {
   string_t *str_obj = malloc(sizeof(string_t));
   char *str_contents = malloc(size_in_bytes);
   if (!str_obj || !str_contents) return NULL;
@@ -65,8 +75,7 @@ string_t *findReplace(string_t *const haystack, const string_t *const needle,
    * Beyond that, this statement only serves to terminate the function if any
    * passed strings are of length 0, since no meaningful operation can be had.
    */
-  if (*HAY_LEN == 0 || NEEDLE_LEN == 0 || REPLACER_LEN == 0)
-    return haystack;
+  if (*HAY_LEN == 0 || NEEDLE_LEN == 0 || REPLACER_LEN == 0) return haystack;
 
   const ptrdiff_t needle_index = strstr(hay, to_be_replaced) - hay;
   if (needle_index >= 0) {
@@ -91,6 +100,6 @@ string_t *findReplace(string_t *const haystack, const string_t *const needle,
   return haystack;
 }
 
-static string_t *string_from_input_stream() {
+static string_t *string_from_input_stream(FILE *const stream) {
 
 }
