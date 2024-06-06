@@ -5,10 +5,10 @@
 #define BASE_ALLOCATION (2048) /* In bytes. */
 #define BASE_REALLOCATION_MULITPLIER (2)
 
-string_t *newString(const char *const raw_text) {
+string_t *new_string_from_chars(const char *const raw_text) {
   string_t *str_obj = malloc(sizeof(string_t));
   char *str_contents = malloc(BASE_ALLOCATION);
-  if (!str_contents) return NULL;
+  if (!str_obj || !str_contents) return NULL;
   str_obj->allocated_bytes = BASE_ALLOCATION;
   str_obj->reallocation_multiplier = BASE_REALLOCATION_MULITPLIER;
 
@@ -24,6 +24,17 @@ string_t *newString(const char *const raw_text) {
   str_contents[i] = '\0';
   str_obj->data = str_contents;
   str_obj->length = i;
+  return str_obj;
+}
+
+string_t *new_string_preallocated(const size_t size_in_bytes) {
+  string_t *str_obj = malloc(sizeof(string_t));
+  char *str_contents = malloc(size_in_bytes);
+  if (!str_obj || !str_contents) return NULL;
+  str_obj->allocated_bytes = size_in_bytes;
+  str_obj->reallocation_multiplier = BASE_REALLOCATION_MULITPLIER;
+  str_obj->data = str_contents;
+  str_obj->length = 0;
   return str_obj;
 }
 
@@ -78,4 +89,8 @@ string_t *findReplace(string_t *const haystack, const string_t *const needle,
     haystack->data = hay;
   }
   return haystack;
+}
+
+static string_t *string_from_input_stream() {
+
 }

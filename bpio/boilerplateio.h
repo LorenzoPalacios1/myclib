@@ -27,7 +27,7 @@
  * \param max_length The maximum size of the string
  * \param stream The input stream to read from
  */
-size_t getStr(char *str, const char delim, const size_t max_length,
+string_t *getStr(const char delim, const size_t max_length,
               FILE *const stream);
 
 /*
@@ -40,5 +40,5 @@ size_t getStr(char *str, const char delim, const size_t max_length,
  *
  * This function has the same semantics as `getStr()` otherwise.
  */
-size_t getStrStdin(char *str, const size_t length);
+string_t *getStrStdin(const size_t length);
 #endif
