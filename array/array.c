@@ -8,7 +8,7 @@ array_t *new_array(const void *const data, const size_t elem_size,
   new_arr->elem_size = elem_size;
   new_arr->data = malloc(new_arr->allocated_size);
 
-  memcpy(new_arr->data, data, num_elems * elem_size);
+  if (data != NULL) memcpy(new_arr->data, data, num_elems * elem_size);
   return new_arr;
 }
 
