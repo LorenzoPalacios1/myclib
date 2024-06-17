@@ -39,13 +39,13 @@ string_t *string_preallocated(const size_t size_in_bytes) {
   return str_obj;
 }
 
-string_t *shrinkAllocationToLength(string_t *const str) {
+string_t *shrink_alloc_to_length(string_t *const str) {
   if (str->length < str->allocated_bytes - 1)
     str->data = realloc(str->data, str->length);
   return str;
 }
 
-string_t *findReplace(string_t *const haystack, const string_t *const needle,
+string_t *find_replace(string_t *const haystack, const string_t *const needle,
                       const string_t *const replacement) {
   /* These are shorthands for accessing often used variables. */
   const char *const replacer = replacement->data;
@@ -92,15 +92,21 @@ string_t *findReplace(string_t *const haystack, const string_t *const needle,
   return haystack;
 }
 
-string_t *string_from_input_stream(FILE *const stream) {
-  string_t *new_str = newString(BASE_ALLOCATION);
+string_t *string_from_stream(FILE *const stream) {
+  string_t *new_str = new_string(BASE_ALLOCATION);
+  char *str_contents = new_str->data;
 
   char c = getc(stream);
   for (size_t i = 0; c && c != EOF; i ++) {
     if (i == new_str->allocated_bytes) {
-
+      new_str->allocated_bytes *= new_str->reallocation_multiplier;
+      str_contents = realloc(str_contents, new_str->allocated_bytes);
+      if (!str_contents) {
+        free(new_str);
+        return NULL;
+      }
     }
-    new_str->data[i] = c;
+    str_contents[i] = c;
     c = getc(stream);
   }
   return new_str;

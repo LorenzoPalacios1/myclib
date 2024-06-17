@@ -9,7 +9,7 @@
 
 #include "../MyBasics.h"
 
-size_t getStr(const char delim, const size_t max_length,
+size_t get_str(const char delim, const size_t max_length,
               FILE *const stream) {
   if (stream == NULL) {
     fputs("\ngetStr(): Invalid input stream; No reading occurred", stderr);
@@ -30,8 +30,8 @@ size_t getStr(const char delim, const size_t max_length,
   return i;
 }
 
-string_t *getStrStdin(const size_t max_length) {
-  string_t *const new_str = getStr('\n', max_length, stdin);
+string_t *get_str_stdin(const size_t max_length) {
+  string_t *const new_str = get_str('\n', max_length, stdin);
   if (new_str->length > max_length)
     while (getchar() != '\n');
   return new_str;
