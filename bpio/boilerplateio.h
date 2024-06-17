@@ -3,6 +3,8 @@
 
 #include <stdio.h>
 
+#include "../strext/strextensions.h"
+
 /*
  * \returns A string whose content consists of characters within `stream` until
  * either `delim` is read, or the string reaches the specified length.
