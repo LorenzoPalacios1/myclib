@@ -1,3 +1,6 @@
+#ifndef _STRING_BASICS
+#define _STRING_BASICS
+
 #include <stdio.h>
 #include <string.h>
 
@@ -21,14 +24,16 @@ typedef struct string_t {
 /* clang-format on */
 
 string_t *find_replace(string_t *const haystack, const string_t *const needle,
-                      const string_t *const replacer);
+                       const string_t *const replacer);
 
 /* To be added. */
-string_t *find_replace_all(string_t *const haystack, const string_t *const needle,
-                         const string_t *const replacement);
+string_t *find_replace_all(string_t *const haystack,
+                           const string_t *const needle,
+                           const string_t *const replacement);
 
 string_t *string_from_chars(const char *const raw_text);
 
 string_t *string_preallocated(const size_t size_in_bytes);
 
 string_t *string_from_stream(FILE *const stream);
+#endif
