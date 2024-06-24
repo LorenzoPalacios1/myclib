@@ -7,9 +7,9 @@
 
 typedef struct array_t {
   void *data;
-  size_t num_elems;
   size_t allocated_size;
   size_t elem_size;
+  size_t num_elems;
 } array_t;
 
 array_t *new_array(const void *const data, const size_t elem_size,

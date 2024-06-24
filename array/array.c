@@ -1,14 +1,29 @@
 #include "array.h"
 
+#include <limits.h>
+
 array_t *new_array(const void *const data, const size_t elem_size,
                    const size_t num_elems) {
-  array_t *new_arr = malloc(sizeof(array_t));
-  new_arr->num_elems = num_elems;
-  new_arr->allocated_size = (elem_size * num_elems);
-  new_arr->elem_size = elem_size;
-  new_arr->data = malloc(new_arr->allocated_size);
+  /*
+   * Possible future implementation avoiding `malloc()`?
+   * Doesn't look promising. Ugly, too. Really ugly.
+   *
+   * `
+   * array_t *const new_arr =
+   * &((array_t){ (void *)((char[elem_size*num_elems]){}),
+   * elem_size * num_elems, elem_size, num_elems});
+   * `
+   */
+  array_t *const new_arr = malloc(elem_size * num_elems + sizeof(array_t));
 
-  if (data != NULL) memcpy(new_arr->data, data, num_elems * elem_size);
+  new_arr->allocated_size = elem_size * num_elems;
+  new_arr->elem_size = elem_size;
+  new_arr->num_elems = num_elems;
+  new_arr->data = (char *)new_arr + sizeof(array_t);
+
+  printf("%lld\n", (ptrdiff_t)new_arr->data - (ptrdiff_t)new_arr);
+
+  if (data != NULL) memcpy(new_arr->data, data, elem_size * num_elems);
   return new_arr;
 }
 

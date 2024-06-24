@@ -13,19 +13,17 @@
 
 string_t *get_str(const char delim, const size_t max_length,
                   FILE *const stream) {
-  if (stream == NULL) {
-    fputs("\ngetStr(): Invalid input stream; No reading occurred", stderr);
-    return 0;
-  }
-  if (max_length == 0) return 0;
-  if (feof(stream)) return 0;
+  if (stream == NULL)
+    return NULL;
+  if (max_length == 0) return NULL;
+  if (feof(stream)) return NULL;
 
   string_t *const new_str = new_string(max_length);
   char *const str_contents = new_str->data;
 
   int c;
   size_t i = 0;
-  for (; i < max_length; ++i) {
+  for (; i < max_length; i++) {
     c = getc(stream);
     if (c == delim || c == EOF) break;
     str_contents[i] = c;

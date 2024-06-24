@@ -15,12 +15,12 @@ typedef struct string_t {
 
 /* clang-format off */
 #define new_string(arg)                 \
-  _Generic((arg),                       \
+  (_Generic((arg),                       \
   char *: string_from_chars,            \
   FILE *: string_from_stream,           \
   int: string_preallocated,             \
   size_t: string_preallocated           \
-  )(arg)
+  )(arg))
 /* clang-format on */
 
 string_t *find_replace(string_t *const haystack, const string_t *const needle,
