@@ -21,6 +21,6 @@ void delete_array(array_t *arr);
 
 void secure_delete_array(array_t *arr);
 
-void clear_array(array_t *const arr);
+void clear_array_contents(array_t *const arr);
 
 #endif

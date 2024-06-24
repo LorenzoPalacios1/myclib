@@ -15,7 +15,7 @@ typedef struct string_t {
 
 /* clang-format off */
 #define new_string(arg)                 \
-  (_Generic((arg),                       \
+  (_Generic((arg),                      \
   char *: string_from_chars,            \
   FILE *: string_from_stream,           \
   int: string_preallocated,             \

@@ -33,20 +33,16 @@ void *get_elem(const array_t *const arr, const size_t index) {
 }
 
 void delete_array(array_t *arr) {
-  free(arr->data);
   free(arr);
   arr = NULL;
 }
 
 void secure_delete_array(array_t *arr) {
-  memset(arr->data, 0, arr->allocated_size);
-  free(arr->data);
-  memset(arr, 0, sizeof(array_t));
+  memset(arr, 0, arr->allocated_size + sizeof(*arr));
   free(arr);
   arr = NULL;
 }
 
-void clear_array(array_t *const arr) {
+void clear_array_contents(array_t *const arr) {
   memset(arr->data, 0, arr->allocated_size);
-  arr->num_elems = 0;
 }
