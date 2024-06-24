@@ -1,3 +1,8 @@
+/*
+ * This file utilizes rand().
+ * Ensure srand() is called with a valid seed before using these functions.
+ */
+
 #ifndef RANDOMGEN_H
 #define RANDOMGEN_H
 
@@ -9,73 +14,69 @@
 
 #include "randomgen.h"
 
-/* The minimum `signed char` value for a visible character (inclusive). */
+/* The minimum `signed char` value for a visible ASCII character (inclusive). */
 #define VIS_CHAR_START (' ' + 1)
-/* The maximum `signed char` value for a visible character (inclusive). */
+/* The maximum `signed char` value for a visible ASCII character (inclusive). */
 #define VIS_CHAR_END ('' - 1)
 
 /*
- * Set to `true` to prevent certain random generator methods from generating
- * a cache of random data as needed and returning elements from the cache.
- *
- * Note that these caches may rely on the usage of rand(), so ensure that at
- * some point prior to calling these functions srand() is called.
+ * Set to `true` for certain random generator methods to generate
+ * a cache of data as needed and return elements from that cache.
  */
 #define ALLOW_RANDOM_GEN_CACHING (true)
 
 /*
- * Determines the number of elements (not bytes) that each function will cache.
- * Feel free to change the cache size as needed.
+ * Determines the number of elements (not bytes) each relevant function will
+ * cache.
  */
 #if (ALLOW_RANDOM_GEN_CACHING)
-#define CACHE_SIZE ((size_t)256)
+#define CACHE_SIZE ((size_t)1024)
 #endif
 
-/*
- * Returns a single `int` from `rand()` within the specified range (inclusive).
- * Always returns `0` if (`max` < `min`).
- */
-int randomInt(const int min, const int max);
+/* Returns an `int` from `rand()` within the specified range (inclusive). */
+int random_int(const int min, const int max);
 
 /*
  * Returns either `true` or `false`.
  *
- * If caching is enabled, the first call to this function will stock the cache.
+ * If caching is enabled, the first call to this function will create a cache,
+ * then return the first element from the created cache.
  */
-bool randomBool(void);
+bool random_bool(void);
 
-/* Returns a random string of signed chars using `random_vis_uchar()`. */
-char *randomString(const char min, const char max, const size_t length);
+/* Returns a random string of `char` using `random_vis_uchar()`. */
+char *random_raw_string(const char min, const char max, const size_t length);
 
 /*
  * Returns a random string of alphabetical chararacters using
- * random_vis_uchar().
+ * `random_vis_uchar()`.
  */
-char *randomAlphabeticalString(const size_t length);
+char *random_alphabetical_raw_string(const size_t length);
 
 /* Returns a random string of `unsigned char` using `random_vis_uchar()`. */
-uint8_t *randomUnsignedString(const uint8_t min, const uint8_t max,
-                              const size_t length);
+unsigned char *random_unsigned_raw_string(const unsigned char min,
+                                          const unsigned char max,
+                                          const size_t length);
 
 /*
- * Returns a single visible `unsigned char` from `rand()`.
+ * Returns a visible extended ASCII character using `rand()`.
  *
  * If caching is enabled, the first call to this function will stock the cache.
  */
-unsigned char randomVisibleUnsignedChar(void);
+unsigned char random_visible_unsigned_char(void);
 
 /*
- * Returns a single visible `signed char` from `rand()`.
+ * Returns a visible standard ASCII character using `rand()`.
  *
  * If caching is enabled, the first call to this function will stock the cache.
  */
-unsigned char randomVisibleChar(void);
+char random_visible_char(void);
 
 /*
- * Returns a single `unsigned char` from `rand()` whose value is between `min`
+ * Returns an `unsigned char` from `rand()` whose value is between `min`
  * and `max` (inclusive).
  */
-unsigned char randomUnsignedCharInRange(const unsigned char min,
-                                                      const unsigned char max);
+unsigned char random_unsigned_char_in_range(const unsigned char min,
+                                            const unsigned char max);
 
 #endif
