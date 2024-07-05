@@ -46,7 +46,7 @@ string_t *shrink_alloc_to_length(string_t *const str) {
 }
 
 string_t *find_replace(string_t *const haystack, const string_t *const needle,
-                      const string_t *const replacement) {
+                       const string_t *const replacement) {
   /* These are shorthands for accessing often used variables. */
   const char *const replacer = replacement->data;
   const char *const to_be_replaced = needle->data;
@@ -97,7 +97,7 @@ string_t *string_from_stream(FILE *const stream) {
   char *str_contents = new_str->data;
 
   char c = getc(stream);
-  for (size_t i = 0; c && c != EOF; i ++) {
+  for (size_t i = 0; c != EOF; i++) {
     if (i == new_str->allocated_bytes) {
       new_str->allocated_bytes *= new_str->reallocation_multiplier;
       str_contents = realloc(str_contents, new_str->allocated_bytes);
