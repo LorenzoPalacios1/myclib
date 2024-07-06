@@ -6,6 +6,12 @@
 #define BASE_ALLOCATION (2048) /* In bytes. */
 #define BASE_REALLOCATION_MULITPLIER (2)
 
+/*
+ * I plan on rewriting these constructors to call malloc() once instead of twice
+ * as I did with the `arrays` refactoring.
+ * For now, my focus is on getting the test suite functional.
+ */
+
 string_t *string_from_chars(const char *const raw_text) {
   string_t *str_obj = malloc(sizeof(string_t));
   char *str_contents = malloc(BASE_ALLOCATION);
@@ -110,4 +116,36 @@ string_t *string_from_stream(FILE *const stream) {
     c = getc(stream);
   }
   return new_str;
+}
+
+void append_char_to_string(string_t *const str_obj, const char appended) {
+  char *raw_str = str_obj->data;
+  if (str_obj->length == str_obj->allocated_bytes) {
+    str_obj->allocated_bytes *= str_obj->reallocation_multiplier;
+    raw_str = realloc(raw_str, str_obj->allocated_bytes);
+  }
+  raw_str[str_obj->length] = appended;
+  str_obj->length++;
+  raw_str[str_obj->length] = '\0';
+}
+
+string_t *string_from_stream_given_delim(const char delim, FILE *const stream) {
+  string_t *const new_str = new_string(BASE_ALLOCATION);
+  char *const str_contents = new_str->data;
+
+  size_t i = 0;
+  do {
+    const int c = getc(stream);
+    if (c == delim || c == EOF) break;
+    append_char_to_string(new_str, c);
+    i++;
+  } while (true);
+  str_contents[i] = '\0';
+  new_str->length = i;
+
+  return new_str;
+}
+
+string_t *string_from_line_stdin(void) {
+  return string_from_stream_given_delim('\n', stdin);
 }

@@ -23,6 +23,8 @@ typedef struct string_t {
   )(arg))
 /* clang-format on */
 
+void append_char_to_string(string_t *const str_obj, const char appended);
+
 string_t *find_replace(string_t *const haystack, const string_t *const needle,
                        const string_t *const replacer);
 
@@ -36,4 +38,23 @@ string_t *string_from_chars(const char *const raw_text);
 string_t *string_preallocated(const size_t size_in_bytes);
 
 string_t *string_from_stream(FILE *const stream);
+
+/*
+ * \returns A string whose content consists of characters within `stream` until
+ * `delim` is read.
+ *
+ * \note A null terminator will replace `delim` where it would have occurred
+ * within the string.
+ *
+ * \param delim The delimiter character
+ * \param stream The input stream to read from
+ */
+string_t *string_from_stream_given_delim(const char delim, FILE *const stream);
+
+/*
+ * Returns a string whose content consists of characters within `stdin` until
+ * reading a newline character.
+ */
+string_t *string_from_line_stdin(void);
+
 #endif
