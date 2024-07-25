@@ -6,14 +6,22 @@
 
 #include "../MyBasics.h"
 
-#define BASE_STR_CAPACITY (8192) /* In bytes. */
-#define BASE_REALLOC_FACTOR (2)
+/* Capacity size in bytes. Must be greater than 0. */
+#define BASE_STR_CAPACITY (8192)
+/* 
+ * The factor by which functions will expand a string's allocated memory by.
+ * Should be greater than 1.
+ */
+#define BASE_EXPANSION_FACTOR (2)
+#if !(BASE_STR_CAPACITY > 0)
+#error "BASE_STR_CAPACITY must be greater than 0."
+#endif
 
 typedef struct string_t {
   char *data;
   size_t length;
   size_t capacity;
-  double realloc_factor;
+  double expansion_factor;
 } string_t;
 
 /* clang-format off */
@@ -45,7 +53,7 @@ typedef struct string_t {
 string_t *append_char_to_string(string_t *const str_obj, const char appended);
 
 /*
- * Expands the passed string's allocated boundaries by `realloc_factor`.
+ * Expands the passed string's allocated boundaries by `expansion_factor`.
  *
  * \return A (possibly new) pointer associated with the data of `str_obj`, or
  * `NULL` if reallocation failed.

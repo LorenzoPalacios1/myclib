@@ -18,7 +18,7 @@ string_t *append_char_to_string(string_t *str_obj, const char appended) {
 }
 
 string_t *expand_string(string_t *str_obj) {
-  return resize_string(str_obj, str_obj->realloc_factor * str_obj->capacity);
+  return resize_string(str_obj, str_obj->expansion_factor * str_obj->capacity);
 }
 
 string_t *find_replace(string_t *haystack, const string_t *const needle,
@@ -79,7 +79,7 @@ string_t *string_from_chars(const char *const raw_text) {
   string_t *str_obj = malloc(BASE_STR_CAPACITY + sizeof(string_t));
   if (str_obj == NULL) return NULL;
   str_obj->capacity = BASE_STR_CAPACITY;
-  str_obj->realloc_factor = BASE_REALLOC_FACTOR;
+  str_obj->expansion_factor = BASE_EXPANSION_FACTOR;
   str_obj->data = (char *)str_obj + sizeof(string_t);
 
   /*
@@ -107,25 +107,27 @@ string_t *string_from_line_stdin(void) {
 }
 
 string_t *string_from_stream(FILE *const stream) {
-  string_t *str_obj = new_string(BASE_STR_CAPACITY);
+  string_t *str_obj = new_string(BASE_STR_CAPACITY + sizeof(string_t));
   char *str_actual = str_obj->data;
 
   char c = getc(stream);
-  for (size_t i = 0; c != EOF; i++) {
+  size_t i = 0;
+  for (; c != EOF; i++) {
     if (i == str_obj->capacity) {
       string_t *reallocated_mem =
-          resize_string(str_obj, str_obj->realloc_factor * str_obj->capacity);
+          resize_string(str_obj, str_obj->expansion_factor * str_obj->capacity);
       if (reallocated_mem == NULL) return NULL;
       str_obj = reallocated_mem;
     }
     str_actual[i] = c;
     c = getc(stream);
   }
+  str_obj->length = i;
   return str_obj;
 }
 
 string_t *string_from_stream_given_delim(const char delim, FILE *const stream) {
-  string_t *const str_obj = new_string(BASE_STR_CAPACITY);
+  string_t *const str_obj = new_string(BASE_STR_CAPACITY + sizeof(string_t));
   char *const str_actual = str_obj->data;
 
   size_t i = 0;
@@ -147,6 +149,6 @@ string_t *string_of_capacity(const size_t capacity) {
   str_obj->data = (char *)str_obj + sizeof(string_t);
   str_obj->length = 0;
   str_obj->capacity = capacity;
-  str_obj->realloc_factor = BASE_REALLOC_FACTOR;
+  str_obj->expansion_factor = BASE_EXPANSION_FACTOR;
   return str_obj;
 }
