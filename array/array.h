@@ -1,9 +1,7 @@
 #ifndef ARRAY_H
 #define ARRAY_H
 
-#include <string.h>
-
-#include "../MyBasics.h"
+#include <stddef.h>
 
 typedef struct array_t {
   void *data;

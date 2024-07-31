@@ -2,9 +2,6 @@
 #define _STRING_BASICS
 
 #include <stdio.h>
-#include <string.h>
-
-#include "../MyBasics.h"
 
 /* Capacity size in bytes. Must be greater than 0. */
 #define BASE_STR_CAPACITY (8192)

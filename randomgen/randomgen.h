@@ -6,11 +6,8 @@
 #ifndef RANDOMGEN_H
 #define RANDOMGEN_H
 
-#include <limits.h>
 #include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <stddef.h>
 
 #include "randomgen.h"
 

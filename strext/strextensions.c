@@ -1,7 +1,9 @@
 #include "strextensions.h"
 
-#include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <stddef.h>
 #include <string.h>
 
 string_t *append_char_to_string(string_t *str_obj, const char appended) {
@@ -131,12 +133,13 @@ string_t *string_from_stream_given_delim(FILE *const stream, const char delim) {
   char *const str_actual = str_obj->data;
 
   size_t i = 0;
-  do {
+  
+  while (true) {
     const int c = getc(stream);
     if (c == delim || c == EOF) break;
     append_char_to_string(str_obj, c);
     i++;
-  } while (true);
+  }
   str_actual[i] = '\0';
   str_obj->length = i;
 

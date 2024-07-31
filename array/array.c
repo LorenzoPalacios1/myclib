@@ -1,6 +1,8 @@
 #include "array.h"
 
-#include <limits.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stddef.h>
 
 array_t *new_array(const void *const data, const size_t elem_size,
                    const size_t num_elems) {
@@ -20,8 +22,6 @@ array_t *new_array(const void *const data, const size_t elem_size,
   new_arr->elem_size = elem_size;
   new_arr->num_elems = num_elems;
   new_arr->data = (char *)new_arr + sizeof(array_t);
-
-  printf("%lld\n", (ptrdiff_t)new_arr->data - (ptrdiff_t)new_arr);
 
   if (data != NULL) memcpy(new_arr->data, data, elem_size * num_elems);
   return new_arr;
