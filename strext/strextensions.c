@@ -103,7 +103,7 @@ string_t *string_from_chars(const char *const raw_text) {
 }
 
 string_t *string_from_line_stdin(void) {
-  return string_from_stream_given_delim('\n', stdin);
+  return string_from_stream_given_delim(stdin, '\n');
 }
 
 string_t *string_from_stream(FILE *const stream) {
@@ -126,7 +126,7 @@ string_t *string_from_stream(FILE *const stream) {
   return str_obj;
 }
 
-string_t *string_from_stream_given_delim(const char delim, FILE *const stream) {
+string_t *string_from_stream_given_delim(FILE *const stream, const char delim) {
   string_t *const str_obj = new_string(BASE_STR_CAPACITY + sizeof(string_t));
   char *const str_actual = str_obj->data;
 

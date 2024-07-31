@@ -50,7 +50,7 @@ typedef struct string_t {
  * \return A pointer associated with the data of `str_obj`, or `NULL` if
  * appending failed.
  */
-string_t *append_char_to_string(string_t *const str_obj, const char appended);
+string_t *append_char_to_string(string_t *const str_obj, char appended);
 
 /*
  * Expands the passed string's allocated boundaries by `expansion_factor`.
@@ -101,7 +101,7 @@ string_t *find_replace_all(string_t *const haystack,
  * \return A (possibly new) pointer associated with the data of `str_obj`, or
  * `NULL` if reallocation failed.
  */
-string_t *resize_string(string_t *str_obj, const size_t new_size);
+string_t *resize_string(string_t *str_obj, size_t new_size);
 
 /*
  * Shrinks the memory used for `str_obj` to fit the number of characters it
@@ -146,7 +146,7 @@ string_t *string_from_stream(FILE *const stream);
  * \return A pointer to a `string_t` object containing characters from `stream`,
  * or `NULL` upon failure.
  */
-string_t *string_from_stream_given_delim(const char delim, FILE *const stream);
+string_t *string_from_stream_given_delim(FILE *const stream, char delim);
 
 /*
  * Creates a `string_t` object capable of storing `capacity` number of

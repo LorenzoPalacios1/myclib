@@ -34,7 +34,7 @@
 #endif
 
 /* Returns an `int` from `rand()` within the specified range (inclusive). */
-int random_int(const int min, const int max);
+int random_int(int min, int max);
 
 /*
  * Returns either `true` or `false`.
@@ -45,18 +45,17 @@ int random_int(const int min, const int max);
 bool random_bool(void);
 
 /* Returns a random string of `char` using `random_vis_uchar()`. */
-char *random_raw_string(const char min, const char max, const size_t length);
+char *random_raw_string(char min, char max, size_t length);
 
 /*
  * Returns a random string of alphabetical chararacters using
  * `random_vis_uchar()`.
  */
-char *random_alphabetical_raw_string(const size_t length);
+char *random_alphabetical_raw_string(size_t length);
 
 /* Returns a random string of `unsigned char` using `random_vis_uchar()`. */
-unsigned char *random_unsigned_raw_string(const unsigned char min,
-                                          const unsigned char max,
-                                          const size_t length);
+unsigned char *random_unsigned_raw_string(unsigned char min, unsigned char max,
+                                          size_t length);
 
 /*
  * Returns a visible extended ASCII character using `rand()`.
@@ -76,7 +75,7 @@ char random_visible_char(void);
  * Returns an `unsigned char` from `rand()` whose value is between `min`
  * and `max` (inclusive).
  */
-unsigned char random_unsigned_char_in_range(const unsigned char min,
-                                            const unsigned char max);
+unsigned char random_unsigned_char_in_range(unsigned char min,
+                                            unsigned char max);
 
 #endif
