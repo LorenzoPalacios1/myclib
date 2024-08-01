@@ -6,16 +6,6 @@
 
 array_t *new_array(const void *const data, const size_t elem_size,
                    const size_t num_elems) {
-  /*
-   * Possible future implementation avoiding `malloc()`?
-   * Doesn't look promising. Ugly, too. Really ugly.
-   *
-   * `
-   * array_t *const new_arr =
-   * &((array_t){ (void *)((char[elem_size*num_elems]){}),
-   * elem_size * num_elems, elem_size, num_elems});
-   * `
-   */
   array_t *const new_arr = malloc(elem_size * num_elems + sizeof(array_t));
 
   new_arr->allocated_size = elem_size * num_elems;
