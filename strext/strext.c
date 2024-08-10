@@ -1,4 +1,4 @@
-#include "strextensions.h"
+#include "strext.h"
 
 #include <stdio.h>
 #include <stdlib.h>

@@ -1,5 +1,5 @@
-#ifndef _STRING_BASICS
-#define _STRING_BASICS
+#ifndef _STR_EXT
+#define _STR_EXT
 
 #include <stdio.h>
 
