@@ -51,14 +51,18 @@ static inline clock_t timed_printf(const char *format, ...) {
  */
 static clock_t print_data(const int *data, const size_t num_elems) {
   const clock_t START_TIME = clock();
-  char buf[1024];
-  for (size_t data_i = 0, buf_i = 0; data_i < num_elems; data_i++) {
+  char buf[512] = "[";
+  for (size_t data_i = 0, buf_i = 1; data_i < num_elems; data_i++) {
     if (buf_i >= sizeof(buf) - 1) {
       buf[sizeof(buf) - 1] = '\0';
       printf("%s", buf);
       buf_i = 0;
     }
-    buf_i += snprintf(buf, sizeof(buf) - buf_i, "%d, ", data[data_i]);
+    if (data_i == num_elems - 1) {
+      snprintf(buf + buf_i, sizeof(buf) - buf_i, "%d]", data[data_i]);
+      break;
+    }
+    buf_i += snprintf(buf + buf_i, sizeof(buf) - buf_i, "%d, ", data[data_i]);
   }
   puts(buf);
   const clock_t elapsed_time = clock() - START_TIME;
@@ -68,14 +72,20 @@ static clock_t print_data(const int *data, const size_t num_elems) {
 /* - TEST FUNCTIONS BEGIN - */
 
 static clock_t _test_new_array(void) {
-  int test_data[][4] = {{1, 2, 3, 4}};
+  const int test_data[][10] = {{1, 2, 3, 4, 5, 6, 7, 8, 9, 0}};
   puts("Testing new_array()");
   clock_t start_time = clock();
   for (size_t i = 0; i < SIZEOF_ARR(test_data); i++) {
-    const clock_t IO_TIME = timed_printf("Test %zu data: ", i) +
-                            print_data(test_data[i], SIZEOF_ARR(test_data[i]));
+    clock_t IO_TIME = timed_printf("Test %zu data: ", i) +
+                      print_data(test_data[i], SIZEOF_ARR(test_data[i]));
+    array_t *arr =
+        new_array(test_data[i], sizeof(**test_data), SIZEOF_ARR(*test_data));
+    IO_TIME += timed_printf("array_t contents: ") +
+               print_data(arr->data, arr->num_elems) +
+               timed_printf("Status: (%d)\n",
+                            memcmp(test_data[i], arr->data, arr->num_elems));
+    delete_array(arr);
     start_time += IO_TIME;
-    new_array(test_data[i], sizeof(**test_data), SIZEOF_ARR(*test_data));
   }
   const clock_t end_time = clock() - start_time;
 
@@ -112,7 +122,7 @@ void str_to_lower(char *str) {
  * `fgets()` retains newlines inside input, thereby making detection of
  * `RUN_ALL_TESTS_KEYWORD` difficult, and `scanf()` is too finicky.
  */
-static void get_line_from_stdin(char *str, const size_t max_len) {
+static void get_line_from_stdin(char *const str, const size_t max_len) {
   for (size_t i = 0; i < max_len; i++) {
     const char chr = getchar();
     if (chr == '\n') {
@@ -138,7 +148,8 @@ static void get_line_from_stdin(char *str, const size_t max_len) {
  * intend to refactor this function later.
  */
 static test_entry *get_user_test_selection(void) {
-  test_entry *const selected_tests = malloc(sizeof(test_entry) * (NUM_TESTS + 1));
+  test_entry *const selected_tests =
+      malloc(sizeof(test_entry) * (NUM_TESTS + 1));
 
   char buf[DIGITS_IN_NUM(SIZE_MAX) + 1];
   size_t test_index;

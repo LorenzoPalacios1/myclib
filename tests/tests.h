@@ -57,5 +57,4 @@ typedef struct test_entry {
   test_func_t func;
   clock_t time_taken;
 } test_entry;
-
 #endif
