@@ -22,15 +22,14 @@ void *get_elem(const array_t *const arr, const size_t index) {
   return (char *)arr->data + (arr->elem_size * index);
 }
 
-void delete_array(array_t *arr) {
-  free(arr);
-  arr = NULL;
+void delete_array(array_t **const arr) {
+  free(*arr);
+  *arr = NULL;
 }
 
-void secure_delete_array(array_t *arr) {
-  memset(arr, 0, arr->allocated_size + sizeof(*arr));
-  free(arr);
-  arr = NULL;
+void secure_delete_array(array_t **const arr) {
+  memset(*arr, 0, (*arr)->allocated_size + sizeof(**arr));
+  delete_array(arr);
 }
 
 void clear_array_contents(array_t *const arr) {
