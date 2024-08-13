@@ -54,7 +54,7 @@ char random_visible_char(void) {
 #if (!ALLOW_RANDOM_GEN_CACHING)
   return random_int(VIS_CHAR_START, CHAR_MAX);
 #else
-  static uint8_t cache[CACHE_SIZE];
+  static char cache[CACHE_SIZE];
   static size_t iterator = CACHE_SIZE;
 
   if (iterator == CACHE_SIZE) {
@@ -66,16 +66,16 @@ char random_visible_char(void) {
 #endif
 }
 
-uint8_t random_unsigned_char_in_range(const unsigned char min,
+unsigned char random_unsigned_char_in_range(const unsigned char min,
                                       const unsigned char max) {
   return random_int(min, max);
 }
 
-uint8_t random_visible_unsigned_char(void) {
+unsigned char random_visible_unsigned_char(void) {
 #if (!ALLOW_RANDOM_GEN_CACHING)
   return random_int(VIS_CHAR_START, UCHAR_MAX);
 #else
-  static uint8_t cache[CACHE_SIZE];
+  static unsigned char cache[CACHE_SIZE];
   static size_t iterator = CACHE_SIZE;
 
   if (iterator == CACHE_SIZE) {
