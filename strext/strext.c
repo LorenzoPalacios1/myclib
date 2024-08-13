@@ -1,22 +1,49 @@
 #include "strext.h"
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
-string_t *append_char_to_string(string_t *str_obj, const char appended) {
-  char *raw_str = str_obj->data;
-  if (str_obj->length == str_obj->capacity) {
-    string_t *reallocated_mem = expand_string(str_obj);
+string_t *append_char(string_t *dst, const char appended) {
+  if (dst->length == dst->capacity) {
+    string_t *reallocated_mem = expand_string(dst);
     if (reallocated_mem == NULL) return NULL;
-    str_obj = reallocated_mem;
+    dst = reallocated_mem;
   }
-  raw_str[str_obj->length] = appended;
-  str_obj->length++;
-  raw_str[str_obj->length] = '\0';
-  return str_obj;
+  dst->data[dst->length] = appended;
+  dst->length++;
+  dst->data[dst->length] = '\0';
+  return dst;
+}
+
+string_t *append_str(string_t *dst, const string_t *const src) {
+  const size_t SRC_LEN = src->length;
+  size_t DST_CAPACITY_TEMP = dst->capacity;
+
+  while (DST_CAPACITY_TEMP - dst->length < SRC_LEN)
+    DST_CAPACITY_TEMP *= dst->expansion_factor;
+  if (DST_CAPACITY_TEMP != dst->capacity)
+    dst = resize_string(dst, DST_CAPACITY_TEMP);
+  if (dst == NULL) return NULL;
+  strcat(dst->data + dst->length, src->data);
+  dst->length += SRC_LEN;
+  return dst;
+}
+
+string_t *append_raw_str(string_t *dst, const char *src, const size_t src_len) {
+  const size_t SRC_LEN = src_len;
+  size_t DST_CAPACITY_TEMP = dst->capacity;
+
+  while (DST_CAPACITY_TEMP - dst->length < SRC_LEN)
+    DST_CAPACITY_TEMP *= dst->expansion_factor;
+  if (DST_CAPACITY_TEMP != dst->capacity)
+    dst = resize_string(dst, DST_CAPACITY_TEMP);
+  if (dst == NULL) return NULL;
+  strcat(dst->data + dst->length, src);
+  dst->length += SRC_LEN;
+  return dst;
 }
 
 string_t *expand_string(string_t *str_obj) {
@@ -133,11 +160,11 @@ string_t *string_from_stream_given_delim(FILE *const stream, const char delim) {
   char *const str_actual = str_obj->data;
 
   size_t i = 0;
-  
+
   while (true) {
     const int c = getc(stream);
     if (c == delim || c == EOF) break;
-    append_char_to_string(str_obj, c);
+    append_char(str_obj, c);
     i++;
   }
   str_actual[i] = '\0';

@@ -5,7 +5,7 @@
 
 /* Capacity size in bytes. Must be greater than 0. */
 #define BASE_STR_CAPACITY (8192)
-/* 
+/*
  * The factor by which functions will expand a string's allocated memory by.
  * Should be greater than 1.
  */
@@ -42,18 +42,37 @@ typedef struct string_t {
 /* clang-format on */
 
 /*
- * Appends `appended` to the end of `str_obj`, expanding if necessary.
+ * Appends `appended` to the end of `dst`, expanding if necessary.
  *
- * \return A pointer associated with the data of `str_obj`, or `NULL` if
- * appending failed.
+ * \return A pointer associated with the data of `dst`, or `NULL` if
+ * the operation failed.
  */
-string_t *append_char_to_string(string_t *str_obj, char appended);
+string_t *append_char(string_t *dst, char appended);
 
 /*
- * Expands the passed string's allocated boundaries by `expansion_factor`.
+ * Appends `src` to the end of `dst_str`, expanding if necessary.
  *
- * \return A (possibly new) pointer associated with the data of `str_obj`, or
- * `NULL` if reallocation failed.
+ * \return A pointer associated with the data of `dst`, or `NULL` if the
+ * operation failed.
+ */
+string_t *append_str(string_t *dst, const string_t *src);
+
+/*
+ * Appends `src` to the end of `dst_str`, expanding if necessary.
+ *
+ * \return A pointer associated with the data of `dst`, or `NULL` if the
+ * operation failed.
+ */
+string_t *append_raw_str(string_t *dst, const char *src, size_t src_len);
+
+/*
+ * Expands the passed string's allocated boundaries by `expansion_factor`,
+ * updating the stats of `str_obj` as necessary.
+ *
+ * \return A (possibly new) pointer associated with the data of `str_obj`,
+ * or `NULL` if reallocation failed.
+ * 
+ * \note If reallocation failed, `str_obj` will be unmodified.
  */
 string_t *expand_string(string_t *str_obj);
 
@@ -84,12 +103,12 @@ string_t *find_replace(string_t *haystack, const string_t *needle,
  *
  * \attention Function not yet complete.
  */
-string_t *find_replace_all(string_t *haystack,
-                           const string_t *needle,
+string_t *find_replace_all(string_t *haystack, const string_t *needle,
                            const string_t *replacement);
 
 /*
- * Reallocates the memory used for `str_obj` to fit `new_size` bytes.
+ * Reallocates the memory used for `str_obj` to fit `new_size` bytes, updating
+ * the stats of `str_obj` as necessary.
  *
  * This function only modifies the memory allocated for characters, meaning
  * there will always be enough space for the data members of `string_t`
@@ -97,6 +116,8 @@ string_t *find_replace_all(string_t *haystack,
  *
  * \return A (possibly new) pointer associated with the data of `str_obj`, or
  * `NULL` if reallocation failed.
+ * 
+ * \note If reallocation failed, `str_obj` will be unmodified.
  */
 string_t *resize_string(string_t *str_obj, size_t new_size);
 
