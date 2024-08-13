@@ -47,7 +47,7 @@ typedef struct string_t {
  * \return A pointer associated with the data of `str_obj`, or `NULL` if
  * appending failed.
  */
-string_t *append_char_to_string(string_t *const str_obj, char appended);
+string_t *append_char_to_string(string_t *str_obj, char appended);
 
 /*
  * Expands the passed string's allocated boundaries by `expansion_factor`.
@@ -68,8 +68,8 @@ string_t *expand_string(string_t *str_obj);
  * \note A returned `NULL` pointer does not guarantee `haystack` is unmodified
  * by this function.
  */
-string_t *find_replace(string_t *const haystack, const string_t *const needle,
-                       const string_t *const replacer);
+string_t *find_replace(string_t *haystack, const string_t *needle,
+                       const string_t *replacer);
 
 /*
  * Finds all occurrences of `needle` within `haystack` starting from the
@@ -84,9 +84,9 @@ string_t *find_replace(string_t *const haystack, const string_t *const needle,
  *
  * \attention Function not yet complete.
  */
-string_t *find_replace_all(string_t *const haystack,
-                           const string_t *const needle,
-                           const string_t *const replacement);
+string_t *find_replace_all(string_t *haystack,
+                           const string_t *needle,
+                           const string_t *replacement);
 
 /*
  * Reallocates the memory used for `str_obj` to fit `new_size` bytes.
@@ -116,7 +116,7 @@ string_t *shrink_alloc_to_length(string_t *str_obj);
  * \return A `string_t` object containing characters from `raw_text`, or `NULL`
  * upon failure.
  */
-string_t *string_from_chars(const char *const raw_text);
+string_t *string_from_chars(const char *raw_text);
 
 /*
  * Generates a `string_t` object whose `data` consists of a single line of
@@ -134,7 +134,7 @@ string_t *string_from_line_stdin(void);
  * \return A pointer to a `string_t` object containing characters from `stream`,
  * or `NULL` upon failure.
  */
-string_t *string_from_stream(FILE *const stream);
+string_t *string_from_stream(FILE *stream);
 
 /*
  * Creates a `string_t` object whose `data` consists of characters from `stream`
@@ -143,7 +143,7 @@ string_t *string_from_stream(FILE *const stream);
  * \return A pointer to a `string_t` object containing characters from `stream`,
  * or `NULL` upon failure.
  */
-string_t *string_from_stream_given_delim(FILE *const stream, char delim);
+string_t *string_from_stream_given_delim(FILE *stream, char delim);
 
 /*
  * Creates a `string_t` object capable of storing `capacity` number of
