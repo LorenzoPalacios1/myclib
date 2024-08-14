@@ -92,6 +92,12 @@ string_t *find_replace(string_t *haystack, const string_t *const needle,
   return haystack;
 }
 
+/* 
+ * A fix is needed for when `new_size` is equal to zero. This often causes
+ * segmentation faults with any functions reliant upon a null terminator due to
+ * no such character being present (because there isn't any space allocated for
+ * one).
+ */
 string_t *resize_string(string_t *str_obj, const size_t new_size) {
   string_t *new_mem = realloc(str_obj, new_size + sizeof(string_t));
   if (new_mem == NULL) return NULL;
