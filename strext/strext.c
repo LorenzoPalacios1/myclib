@@ -46,6 +46,16 @@ string_t *append_raw_str(string_t *dst, const char *src, const size_t src_len) {
   return dst;
 }
 
+void _delete_string(string_t **str_obj) {
+  free(*str_obj);
+  *str_obj = NULL;
+}
+
+void delete_string_s(string_t *str_obj) {
+  memset(str_obj, 0, str_obj->capacity + sizeof(string_t));
+  delete_string(str_obj);
+}
+
 string_t *expand_string(string_t *str_obj) {
   return resize_string(str_obj, str_obj->expansion_factor * str_obj->capacity);
 }
@@ -92,7 +102,7 @@ string_t *find_replace(string_t *haystack, const string_t *const needle,
   return haystack;
 }
 
-/* 
+/*
  * A fix is needed for when `new_size` is equal to zero. This often causes
  * segmentation faults with any functions reliant upon a null terminator due to
  * no such character being present (because there isn't any space allocated for

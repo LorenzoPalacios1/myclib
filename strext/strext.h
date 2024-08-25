@@ -22,7 +22,6 @@ typedef struct string_t {
 } string_t;
 
 /* clang-format off */
-
 #define new_string(arg)                   \
   (_Generic((arg),                        \
   char *: string_from_chars,              \
@@ -38,8 +37,9 @@ typedef struct string_t {
   unsigned short: string_of_capacity,     \
   unsigned char: string_of_capacity       \
   )(arg))
-
 /* clang-format on */
+
+#define delete_string(str) _delete_string(&(str))
 
 /*
  * Appends `appended` to the end of `dst`, expanding if necessary.
@@ -64,6 +64,10 @@ string_t *append_str(string_t *dst, const string_t *src);
  * operation failed.
  */
 string_t *append_raw_str(string_t *dst, const char *src, size_t src_len);
+
+void _delete_string(string_t **str_obj);
+
+void delete_string_s(string_t *str_obj);
 
 /*
  * Expands the passed string's allocated boundaries by `expansion_factor`,
