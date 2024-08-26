@@ -15,6 +15,8 @@ typedef struct tree_t {
   node_t *root;
   size_t num_nodes;
   size_t depth;
+  size_t bytes_allocated; /* Total bytes allocated for the tree and nodes. */
+  size_t bytes_used;
 } tree_t;
 
 #define new_tree(data, length) _new_tree(data, sizeof *(data), length)
