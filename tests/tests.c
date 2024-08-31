@@ -81,9 +81,9 @@ static clock_t _test_new_array(void) {
     array_t *arr =
         new_array(test_data[i], sizeof(**test_data), SIZEOF_ARR(*test_data));
     IO_TIME += timed_printf("array_t contents: ") +
-               print_data(arr->data, arr->num_elems) +
+               print_data(arr->data, arr->length) +
                timed_printf("Status: (%d)\n",
-                            memcmp(test_data[i], arr->data, arr->num_elems));
+                            memcmp(test_data[i], arr->data, arr->length));
     delete_array(arr);
     start_time += IO_TIME;
   }
