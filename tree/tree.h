@@ -8,6 +8,7 @@ typedef struct node_t {
   void *value;
   struct node_t *parent;
   struct node_t **children;
+  size_t num_children;
 } node_t;
 
 /* Container structure for a generic tree data structure. */
@@ -21,27 +22,29 @@ typedef struct tree_t {
 
 #define new_tree(data, length) _new_tree(data, sizeof *(data), length)
 
+#define delete_tree(tree) _delete_tree(&tree)
+
 /*
  * Initializes a tree with the given elements from the passed array.
  * The first element in the array is always the root node, and subsequent
  * array elements are placed as evenly as possible on either side.
  *
- * Ex. Consider an array of five elements: {A, B, C, D, E}.
+ * Ex. Consider an array of five elements: {1, 2, 3, 4, 5}.
  *     The resultant tree would look like this:
  *
- *         A
+ *         1
  *        / \
- *       B   C
+ *       2   3
  *      /     \
- *     D       E
+ *     4       5
  */
 tree_t *_new_tree(const void *data, size_t elem_size, size_t length);
 
 /*
- * Frees the entire passed tree's consumed memory and assigns a `NULL`
- * pointer value to the root.
+ * Frees the passed tree's consumed memory and reassigns the pointer to the tree
+ * to `NULL`.
  */
-void delete_tree(tree_t **tree_to_delete);
+void _delete_tree(tree_t **tree_to_delete);
 
 /*
  * Same as `delete_tree()`, except this function will set all allocated memory
