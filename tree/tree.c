@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 tree_t *_new_tree(const void *const data, const size_t elem_size,
                   const size_t length) {
