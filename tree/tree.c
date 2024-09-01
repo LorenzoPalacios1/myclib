@@ -11,14 +11,16 @@ tree_t *_new_tree(const void *const data, const size_t elem_size,
   /*
    * The first portion of the below expression determines the minimum amount of
    * memory required for the tree and its nodes. The second portion determines
-   * the minimum amount of memory required to contain a list of each node's
-   * children.
+   * the minimum amount of memory required to contain a list of pointers to each
+   * node's children.
    *
    * `length - 1` exists in the second expression since the root node will have
-   * two children, while every other node will have only one. Meanwhile, the
-   * last two will have no children. This gives the unmodified expression
+   * two children, while every other node will have only one, except for the
+   * last two, which will have no children. This gives the expression:
    *
    * (n + 1 - 2) * ptr_size
+   *
+   * where `n` is the number of nodes.
    */
   const size_t REQUIRED_MEM =
       (length * NODE_SIZE + sizeof(tree_t)) + ((length - 1) * sizeof(node_t *));
@@ -31,30 +33,40 @@ tree_t *_new_tree(const void *const data, const size_t elem_size,
   tree_obj->bytes_allocated = REQUIRED_MEM;
   tree_obj->bytes_used = REQUIRED_MEM;
 
-  node_t *nodes_heap = (node_t *)((char *)tree_obj + sizeof(tree_t));
-  nodes_heap->parent = NULL;
-  nodes_heap->value = (char *)nodes_heap + sizeof(node_t);
-  memcpy(nodes_heap->value, data, elem_size);
-  tree_obj->root = nodes_heap;
+  node_t *nodes_mem = (node_t *)((char *)tree_obj + sizeof(tree_t));
+  node_t **children_mem = (node_t **)((char *)tree_obj + REQUIRED_MEM -
+                                      ((length - 1) * sizeof(node_t *)));
+  nodes_mem[0].parent = NULL;
+  nodes_mem[0].num_children = 0;
+  nodes_mem[0].value = (char *)nodes_mem + sizeof(node_t);
+  memcpy(nodes_mem[0].value, data, elem_size);
+  tree_obj->root = nodes_mem;
+  nodes_mem = (node_t *)((char *)nodes_mem + NODE_SIZE);
   for (size_t i = 1; i < length; i++) {
-    nodes_heap = (node_t *)((char *)nodes_heap + NODE_SIZE);
     /*
-     * This expression exists to give the nodes the structure shown in the
-     * documentation's example. The ensures the root node is the parent to two
-     * nodes, after which all other nodes are the parent to at most one node.
+     * This ensures the root node is the parent to two nodes and that all other
+     * nodes are the parent to no more than one node.
      */
-    node_t *const parent_node =
-        (node_t *)((char *)nodes_heap - (i == 2 ? 2 * NODE_SIZE : NODE_SIZE));
-    nodes_heap->parent = parent_node;
-    nodes_heap->value = (char *)nodes_heap + sizeof(node_t);
-    memcpy(nodes_heap->value, (char *)data + i * elem_size, elem_size);
+    if (i <= 2) {
+      nodes_mem->parent = tree_obj->root;
+      children_mem[i - 1] = nodes_mem;
+      tree_obj->root->children = children_mem;
+      tree_obj->root->num_children++;
+      if (i == 2)
+        children_mem = (node_t **)((char *)children_mem + 2 * sizeof(node_t *));
+    } else {
+      node_t *parent_node = (node_t *)((char *)nodes_mem - 2 * NODE_SIZE);
+      nodes_mem->parent = parent_node;
+      parent_node->children = children_mem;
+      parent_node->children[0] = nodes_mem;
+      parent_node->num_children = 1;
+      children_mem = (node_t **)((char *)children_mem + sizeof(node_t *));
+      /* The last two nodes in the tree have no children. */
+      if (i >= length - 2) nodes_mem->num_children = 0;
+    }
+    nodes_mem->value = (char *)nodes_mem + sizeof(node_t);
+    memcpy(nodes_mem->value, (char *)data + i * elem_size, elem_size);
+    nodes_mem = (node_t *)((char *)nodes_mem + NODE_SIZE);
   }
   return tree_obj;
-}
-
-int main(void) {
-  int data[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-  tree_t *a = new_tree(data, sizeof(data) / sizeof(*data));
-  printf("%d\n", (int)(*(int *)a->root->value));
-  return 0;
 }
