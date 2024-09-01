@@ -1,8 +1,10 @@
 #include "tree.h"
 
 #include <stddef.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 tree_t *_new_tree(const void *const data, const size_t elem_size,
                   const size_t length) {
@@ -60,4 +62,14 @@ tree_t *_new_tree(const void *const data, const size_t elem_size,
     nodes_mem = (node_t *)((char *)nodes_mem + NODE_SIZE);
   }
   return tree_obj;
+}
+
+void _delete_tree(tree_t **const tree) {
+  free(*tree);
+  *tree = NULL;
+}
+
+void _secure_delete_tree(tree_t **tree) {
+  memset(*tree, 0, (*tree)->bytes_allocated);
+  _delete_tree(tree);
 }
