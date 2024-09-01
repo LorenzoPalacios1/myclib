@@ -1,7 +1,6 @@
 #include "tree.h"
 
 #include <stddef.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -27,8 +26,6 @@ tree_t *_new_tree(const void *const data, const size_t elem_size,
   tree_t *const tree_obj = malloc(REQUIRED_MEM);
   if (tree_obj == NULL) return NULL;
 
-  /* Adding one since the root node is counted in the depth. */
-  tree_obj->depth = length / 2 + 1;
   tree_obj->num_nodes = length;
   tree_obj->bytes_allocated = REQUIRED_MEM;
   tree_obj->bytes_used = REQUIRED_MEM;
@@ -43,29 +40,23 @@ tree_t *_new_tree(const void *const data, const size_t elem_size,
   tree_obj->root = nodes_mem;
   nodes_mem = (node_t *)((char *)nodes_mem + NODE_SIZE);
   for (size_t i = 1; i < length; i++) {
+    nodes_mem->num_children = 0;
+    nodes_mem->value = (char *)nodes_mem + sizeof(node_t);
+    memcpy(nodes_mem->value, (char *)data + i * elem_size, elem_size);
     /*
      * This ensures the root node is the parent to two nodes and that all other
      * nodes are the parent to no more than one node.
      */
-    if (i <= 2) {
-      nodes_mem->parent = tree_obj->root;
-      children_mem[i - 1] = nodes_mem;
-      tree_obj->root->children = children_mem;
-      tree_obj->root->num_children++;
-      if (i == 2)
-        children_mem = (node_t **)((char *)children_mem + 2 * sizeof(node_t *));
-    } else {
-      node_t *parent_node = (node_t *)((char *)nodes_mem - 2 * NODE_SIZE);
-      nodes_mem->parent = parent_node;
-      parent_node->children = children_mem;
-      parent_node->children[0] = nodes_mem;
-      parent_node->num_children = 1;
-      children_mem = (node_t **)((char *)children_mem + sizeof(node_t *));
-      /* The last two nodes in the tree have no children. */
-      if (i >= length - 2) nodes_mem->num_children = 0;
-    }
-    nodes_mem->value = (char *)nodes_mem + sizeof(node_t);
-    memcpy(nodes_mem->value, (char *)data + i * elem_size, elem_size);
+    node_t *parent_node;
+    if (i <= 2)
+      parent_node = (node_t *)((char *)nodes_mem - NODE_SIZE);
+    else
+      parent_node = (node_t *)((char *)nodes_mem - 2 * NODE_SIZE);
+    nodes_mem->parent = parent_node;
+    children_mem[0] = nodes_mem;
+    parent_node->children = children_mem;
+    parent_node->num_children++;
+    children_mem = (node_t **)((char *)children_mem + sizeof(node_t *));
     nodes_mem = (node_t *)((char *)nodes_mem + NODE_SIZE);
   }
   return tree_obj;

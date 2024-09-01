@@ -1,7 +1,6 @@
 #ifndef TREE_H
 #define TREE_H
 
-#include <stdbool.h>
 #include <stddef.h>
 
 typedef struct node_t {
@@ -15,7 +14,6 @@ typedef struct node_t {
 typedef struct tree_t {
   node_t *root;
   size_t num_nodes;
-  size_t depth;
   size_t bytes_allocated; /* Total bytes allocated for the tree and nodes. */
   size_t bytes_used;
 } tree_t;
@@ -50,14 +48,14 @@ void _delete_tree(tree_t **tree_to_delete);
  * Same as `delete_tree()`, except this function will set all allocated memory
  * of the tree to zero, including pointers and tree/node statistics.
  */
-bool secure_delete_tree(tree_t *tree_to_delete);
+void secure_delete_tree(tree_t *tree_to_delete);
 
 /*
  * Adds the specified element to the passed tree.
  * This function will update the tree's statistics if the element was
  * successfully added to the tree.
  */
-bool add_node(tree_t *parent_tree, const void *elem);
+void add_node(tree_t *parent_tree, const void *elem);
 
 /*
  * Removes `target` node from `src`, thereby causing `target` to have no parent
