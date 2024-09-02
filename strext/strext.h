@@ -24,6 +24,7 @@ typedef struct string_t {
 /* clang-format off */
 #define new_string(arg)                   \
   (_Generic((arg),                        \
+  const char *: string_from_chars,        \
   char *: string_from_chars,              \
   FILE *: string_from_stream,             \
   signed long long: string_of_capacity,   \
