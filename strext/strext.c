@@ -51,9 +51,15 @@ void _delete_string(string_t **str_obj) {
   *str_obj = NULL;
 }
 
-void delete_string_s(string_t *str_obj) {
-  memset(str_obj, 0, str_obj->capacity + sizeof(string_t));
-  delete_string(str_obj);
+void _delete_string_s(string_t **str_obj) {
+  memset(*str_obj, 0, (*str_obj)->capacity + sizeof(string_t));
+  _delete_string(str_obj);
+}
+
+string_t *erase_string_contents(string_t *const str) {
+  str->data -= str->length;
+  str->length = 0;
+  return str;
 }
 
 string_t *expand_string(string_t *str_obj) {
