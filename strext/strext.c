@@ -32,16 +32,18 @@ string_t *append_str(string_t *dst, const string_t *const src) {
   return dst;
 }
 
+#include "../../translator/wdtranslator.h"
+
 string_t *append_raw_str(string_t *dst, const char *src, const size_t src_len) {
   const size_t SRC_LEN = src_len;
   size_t DST_CAPACITY_TEMP = dst->capacity;
-
+  
   while (DST_CAPACITY_TEMP - dst->length < SRC_LEN)
     DST_CAPACITY_TEMP *= dst->expansion_factor;
   if (DST_CAPACITY_TEMP != dst->capacity)
     dst = resize_string(dst, DST_CAPACITY_TEMP);
   if (dst == NULL) return NULL;
-  strcat(dst->data + dst->length, src);
+  strcpy(dst->data + dst->length, src);
   dst->length += SRC_LEN;
   return dst;
 }
@@ -57,7 +59,6 @@ void _delete_string_s(string_t **str_obj) {
 }
 
 string_t *erase_string_contents(string_t *const str) {
-  str->data -= str->length;
   str->length = 0;
   return str;
 }
