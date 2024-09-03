@@ -41,7 +41,7 @@ string_t *append_raw_str(string_t *dst, const char *src, const size_t src_len) {
   if (DST_CAPACITY_TEMP != dst->capacity)
     dst = resize_string(dst, DST_CAPACITY_TEMP);
   if (dst == NULL) return NULL;
-  strcat(dst->data + dst->length, src);
+  strcpy(dst->data + dst->length, src);
   dst->length += SRC_LEN;
   return dst;
 }
@@ -51,9 +51,14 @@ void _delete_string(string_t **str_obj) {
   *str_obj = NULL;
 }
 
-void delete_string_s(string_t *str_obj) {
-  memset(str_obj, 0, str_obj->capacity + sizeof(string_t));
-  delete_string(str_obj);
+void _delete_string_s(string_t **str_obj) {
+  memset(*str_obj, 0, (*str_obj)->capacity + sizeof(string_t));
+  _delete_string(str_obj);
+}
+
+string_t *erase_string_contents(string_t *const str) {
+  str->length = 0;
+  return str;
 }
 
 string_t *expand_string(string_t *str_obj) {
