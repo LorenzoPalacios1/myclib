@@ -7,9 +7,10 @@
 #include <string.h>
 
 string_t *append_char(string_t *dst, const char appended) {
-  if (dst->length == dst->capacity) {
+  if (dst->length == dst->capacity - 1) {
     string_t *reallocated_mem = expand_string(dst);
-    if (reallocated_mem == NULL) return NULL;
+    if (reallocated_mem == NULL)
+      return NULL;
     dst = reallocated_mem;
   }
   dst->data[dst->length] = appended;
