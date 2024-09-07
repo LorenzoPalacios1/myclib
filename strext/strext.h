@@ -19,7 +19,6 @@ typedef struct string_t {
   char *data;
   size_t length;
   size_t capacity;
-  double expansion_factor;
 } string_t;
 
 /* clang-format off */
