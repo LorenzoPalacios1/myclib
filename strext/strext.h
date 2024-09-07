@@ -5,14 +5,15 @@
 
 /* Capacity size in bytes. Must be greater than 0. */
 #define BASE_STR_CAPACITY (8192)
+#if (BASE_STR_CAPACITY <= 0)
+#error "BASE_STR_CAPACITY must be greater than 0."
+#endif
+
 /*
  * The factor by which functions will expand a string's allocated memory by.
  * Should be greater than 1.
  */
-#define BASE_EXPANSION_FACTOR (2)
-#if !(BASE_STR_CAPACITY > 0)
-#error "BASE_STR_CAPACITY must be greater than 0."
-#endif
+#define STR_EXPANSION_FACTOR (2)
 
 typedef struct string_t {
   char *data;
@@ -79,7 +80,7 @@ string_t *erase_string_contents(string_t *const str);
  *
  * \return A (possibly new) pointer associated with the data of `str_obj`,
  * or `NULL` if reallocation failed.
- * 
+ *
  * \note If reallocation failed, `str_obj` will be unmodified.
  */
 string_t *expand_string(string_t *str_obj);
@@ -124,7 +125,7 @@ string_t *find_replace_all(string_t *haystack, const string_t *needle,
  *
  * \return A (possibly new) pointer associated with the data of `str_obj`, or
  * `NULL` if reallocation failed.
- * 
+ *
  * \note If reallocation failed, `str_obj` will be unmodified.
  */
 string_t *resize_string(string_t *str_obj, size_t new_size);

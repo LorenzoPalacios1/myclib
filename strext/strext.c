@@ -23,7 +23,7 @@ string_t *append_str(string_t *dst, const string_t *const src) {
   size_t DST_CAPACITY_TEMP = dst->capacity;
 
   while (DST_CAPACITY_TEMP - dst->length < SRC_LEN)
-    DST_CAPACITY_TEMP *= dst->expansion_factor;
+    DST_CAPACITY_TEMP *= STR_EXPANSION_FACTOR;
   if (DST_CAPACITY_TEMP != dst->capacity)
     dst = resize_string(dst, DST_CAPACITY_TEMP);
   if (dst == NULL) return NULL;
@@ -37,7 +37,7 @@ string_t *append_raw_str(string_t *dst, const char *src, const size_t src_len) {
   size_t DST_CAPACITY_TEMP = dst->capacity;
 
   while (DST_CAPACITY_TEMP - dst->length < SRC_LEN)
-    DST_CAPACITY_TEMP *= dst->expansion_factor;
+    DST_CAPACITY_TEMP *= STR_EXPANSION_FACTOR;
   if (DST_CAPACITY_TEMP != dst->capacity)
     dst = resize_string(dst, DST_CAPACITY_TEMP);
   if (dst == NULL) return NULL;
@@ -58,11 +58,12 @@ void _delete_string_s(string_t **str_obj) {
 
 string_t *erase_string_contents(string_t *const str) {
   str->length = 0;
+  str->data[str->length] = '\0';
   return str;
 }
 
 string_t *expand_string(string_t *str_obj) {
-  return resize_string(str_obj, str_obj->expansion_factor * str_obj->capacity);
+  return resize_string(str_obj, STR_EXPANSION_FACTOR * str_obj->capacity);
 }
 
 string_t *find_replace(string_t *haystack, const string_t *const needle,
@@ -129,7 +130,6 @@ string_t *string_from_chars(const char *const raw_text) {
   string_t *str_obj = malloc(BASE_STR_CAPACITY + sizeof(string_t));
   if (str_obj == NULL) return NULL;
   str_obj->capacity = BASE_STR_CAPACITY;
-  str_obj->expansion_factor = BASE_EXPANSION_FACTOR;
   str_obj->data = (char *)str_obj + sizeof(string_t);
 
   /*
@@ -165,7 +165,7 @@ string_t *string_from_stream(FILE *const stream) {
   for (; c != EOF; i++) {
     if (i == str_obj->capacity) {
       string_t *reallocated_mem =
-          resize_string(str_obj, str_obj->expansion_factor * str_obj->capacity);
+          resize_string(str_obj, STR_EXPANSION_FACTOR * str_obj->capacity);
       if (reallocated_mem == NULL) return NULL;
       str_obj = reallocated_mem;
     }
@@ -200,6 +200,5 @@ string_t *string_of_capacity(const size_t capacity) {
   str_obj->data = (char *)str_obj + sizeof(string_t);
   str_obj->length = 0;
   str_obj->capacity = capacity;
-  str_obj->expansion_factor = BASE_EXPANSION_FACTOR;
   return str_obj;
 }
