@@ -1,4 +1,4 @@
-#include "randomgen.h"
+#include "random.h"
 
 #include <limits.h>
 #include <stdbool.h>
@@ -67,7 +67,7 @@ char random_visible_char(void) {
 }
 
 unsigned char random_unsigned_char_in_range(const unsigned char min,
-                                      const unsigned char max) {
+                                            const unsigned char max) {
   return random_int(min, max);
 }
 

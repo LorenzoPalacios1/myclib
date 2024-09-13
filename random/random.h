@@ -3,13 +3,13 @@
  * Ensure srand() is called with a valid seed before using these functions.
  */
 
-#ifndef RANDOMGEN_H
-#define RANDOMGEN_H
+#ifndef RANDOM_H
+#define RANDOM_H
 
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "randomgen.h"
+#include "random.h"
 
 /* The minimum `signed char` value for a visible ASCII character (inclusive). */
 #define VIS_CHAR_START (' ' + 1)
