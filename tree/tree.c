@@ -34,6 +34,7 @@ tree_t *_new_tree(const void *const data, const size_t elem_size,
   node_t *nodes_mem = (node_t *)((char *)tree_obj + sizeof(tree_t));
   node_t **children_mem = (node_t **)((char *)tree_obj + REQUIRED_MEM -
                                       ((length - 1) * sizeof(node_t *)));
+  /* Root node initialization. */
   nodes_mem[0].parent = NULL;
   nodes_mem[0].num_children = 0;
   nodes_mem[0].value = nodes_mem + 1;
@@ -55,7 +56,7 @@ tree_t *_new_tree(const void *const data, const size_t elem_size,
       parent_node = (node_t *)((char *)nodes_mem - 2 * NODE_SIZE);
     nodes_mem->parent = parent_node;
     children_mem[0] = nodes_mem;
-    /* 
+    /*
      * This statement ensures the third node becomes a child of the tree's root
      * node. Until I better revise my design, this ugly hack will have to stay.
      */
@@ -80,11 +81,11 @@ void _secure_delete_tree(tree_t **const tree) {
 
 node_t *remove_node(tree_t *const src, node_t *const target) {
   node_t *const target_parent = target->parent;
+  printf("%d", target_parent->children[0]->value);
   for (size_t i = 0; i < target_parent->num_children; i++) {
     if (target_parent->children[i] == target) {
-      memcpy(target_parent->children + i, target_parent->children + i + 1,
+      memcpy(&target->parent->children[i], &target->parent->children[i + 1],
              target_parent->num_children - i);
-      break;
     }
   }
   src->num_nodes -= target->num_children + 1;
