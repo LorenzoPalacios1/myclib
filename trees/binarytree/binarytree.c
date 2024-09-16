@@ -16,21 +16,23 @@ binary_tree_t *_new_binary_tree(const void *const data, const size_t elem_size,
   tree_obj->bytes_allocated = REQUIRED_MEM;
   tree_obj->bytes_used = REQUIRED_MEM;
 
-  binary_node_t *nodes_mem =
+  binary_node_t *const nodes_mem =
       (binary_node_t *)((char *)tree_obj + sizeof(binary_tree_t));
-  /* Root node initialization. */
-  nodes_mem[0].parent = NULL;
-  nodes_mem[0].value = nodes_mem + 1;
-  memcpy(nodes_mem[0].value, data, elem_size);
-  tree_obj->root = nodes_mem;
-  nodes_mem = (binary_node_t *)((char *)nodes_mem + NODE_SIZE);
-  for (size_t i = 1; i < length; i++) {
-    nodes_mem->value = (char *)nodes_mem + sizeof(binary_node_t);
-    memcpy(nodes_mem->value, (char *)data + i * elem_size, elem_size);
-    
-
-    nodes_mem = (binary_node_t *)((char *)nodes_mem + NODE_SIZE);
+  for (size_t i = 0; i < length; i++) {
+    binary_node_t *const cur_node = nodes_mem + i * NODE_SIZE;
+    binary_node_t *parent_node;
+    if (i == 0)
+      parent_node = NULL;
+    else if (i == 1)
+      parent_node = cur_node - NODE_SIZE;
+    else
+      parent_node = cur_node - NODE_SIZE * (i & 1);
+    3 & 1;
+    char *const cur_node_data = (char *)nodes_mem + sizeof(binary_node_t);
+    memcpy(cur_node_data, (char *)data + i * elem_size, elem_size);
+    nodes_mem->value = cur_node_data;
   }
+  tree_obj->root = nodes_mem; /* The first node is always the root node. */
   return tree_obj;
 }
 
@@ -45,8 +47,7 @@ void delete_binary_tree_s(binary_tree_t **const tree) {
 }
 
 binary_node_t *unparent_node(binary_tree_t *const src,
-                             binary_node_t *const target) {
-}
+                             binary_node_t *const target) {}
 
 int main(void) {
   static const int data[] = {1, 2, 3, 4, 5, 6};
