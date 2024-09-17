@@ -21,14 +21,12 @@ binary_tree_t *_new_binary_tree(const void *const data, const size_t elem_size,
     binary_node_t *const cur_node = (void *)((char *)nodes_mem + i * NODE_SIZE);
     binary_node_t *parent_node;
     void *const cur_node_data = (char *)cur_node + sizeof(binary_node_t);
-    printf("%lld\n", (char *)cur_node_data - (char *)cur_node);
     if (i == 0)
       parent_node = NULL;
     else {
       /* Ensures all odd nodes become the left child of `parent_node`. */
       parent_node = (void *)((char *)cur_node - NODE_SIZE * ((~i & 1) + 1));
       parent_node->children[~i & 1] = cur_node;
-      // printf("parent node value: %d\n", (int)*(int *)parent_node->value);
     }
     memcpy(cur_node_data, (char *)data + i * elem_size, elem_size);
     cur_node->value = cur_node_data;
@@ -55,7 +53,12 @@ binary_node_t *unparent_node(binary_tree_t *const src,
 int main(void) {
   static const int data[] = {1, 2, 3, 4, 5, 6};
   binary_tree_t *a = new_binary_tree(data, sizeof data / sizeof *data);
-  printf("%lld\n", (ptrdiff_t)a->root);
-  printf("%lld\n", (ptrdiff_t)a->root->children[0]->value);
+  printf("%d\n", *(int *)a->root->value); // 1 (works)
+  printf("%d\n", *(int *)a->root->children[0]->value); // 2 (works)
+  printf("%d\n", *(int *)a->root->children[1]->value); // 3 (works)
+  printf("%d\n", *(int *)a->root->children[0]->children[0]->value); // 4
+  printf("%d\n", *(int *)a->root->children[0]->children[1]->value); // 5
+  printf("%d\n", *(int *)a->root->children[1]->children[0]->value); // 6
+
   return 0;
 }
