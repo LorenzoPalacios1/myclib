@@ -3,23 +3,24 @@
 
 #include <stddef.h>
 
-typedef struct binary_node_t {
+#include "../trees.h"
+
+typedef struct bt_node {
   void *value;
-  struct binary_node_t *parent;
-  /* `children[0]` is the left node and `children[1]` is the right node. */
-  struct binary_node_t *children[2];
-} binary_node_t;
+  struct bt_node *parent;
+  struct bt_node *left, *right;
+} bt_node;
 
 /* Container structure for a binary tree data structure. */
-typedef struct binary_tree_t {
-  binary_node_t *root;
+typedef struct {
+  bt_node *root;
   size_t num_nodes;
-  size_t bytes_allocated; /* Total bytes allocated for the tree and nodes. */
-  size_t bytes_used;
-} binary_tree_t;
+  size_t node_size;
+  size_t allocation; /* Total bytes allocated for the tree and nodes. */
+} binary_tree;
 
 /*
- * This is a convenience macro for generating a `binary_tree_t` from an array.
+ * This is a convenience macro for generating a `binary_tree` from an array.
  * Make sure the arguments have no side effects such as incrementation.
  */
 #define new_binary_tree(data, length) \
@@ -39,26 +40,26 @@ typedef struct binary_tree_t {
  *     / \   / \
  *    3   1 0   0
  */
-binary_tree_t *_new_binary_tree(const void *data, size_t elem_size,
-                                size_t length);
+binary_tree *_new_binary_tree(const void *data, size_t elem_size,
+                              size_t length);
 
 /*
  * Frees the passed binary tree's consumed memory and reassigns its pointer
  * to `NULL`.
  */
-void delete_binary_tree(binary_tree_t **tree);
+void delete_binary_tree(binary_tree **tree);
 
 /*
  * Same as `delete_binary_tree()`, except this function will set all allocated
  * memory of the tree to zero, including pointers and tree/node statistics.
  */
-void delete_binary_tree_s(binary_tree_t **tree);
+void delete_binary_tree_s(binary_tree **tree);
 
 /*
  * Adds the specified element as a child node of `parent_node`.
  * \return A pointer to the added node, or NULL upon failure.
  */
-binary_node_t *add_binary_node(binary_tree_t *tree, const void *elem);
+bt_node *add_binary_node(binary_tree *tree, const void *elem);
 
 /*
  * Removes `target` from `src`, thereby causing `target` to have no parent
@@ -66,11 +67,11 @@ binary_node_t *add_binary_node(binary_tree_t *tree, const void *elem);
  *
  * \return The removed node.
  */
-binary_node_t *remove_binary_node(binary_tree_t *src, binary_node_t *target);
+bt_node *remove_binary_node(binary_tree *src, bt_node *target);
 
 /*
  * This function makes `child` a child node of `parent`, including any child
  * nodes.
  */
-void reparent_binary_node(const binary_node_t *parent, const binary_node_t *child);
+void reparent_binary_node(const bt_node *parent, const bt_node *child);
 #endif
