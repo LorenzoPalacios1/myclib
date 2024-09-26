@@ -29,7 +29,8 @@ typedef struct {
 /*
  * Initializes a binary tree with the given elements from the passed array.
  * The first element in the array is always the root node, and subsequent
- * array elements are placed as evenly as possible on either side.
+ * array elements fill into each node's `left` and `right` consecutively
+ * starting from the left.
  *
  * Ex. Consider an array of seven elements: {7, 4, 9, 3, 0, 1, 0}.
  *     The resultant tree would look like this:

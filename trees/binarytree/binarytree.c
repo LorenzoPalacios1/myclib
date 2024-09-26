@@ -12,6 +12,7 @@ binary_tree *_new_binary_tree(const void *const data, const size_t elem_size,
   const size_t NODE_SIZE = sizeof(bt_node) + elem_size;
   const size_t REQUIRED_MEM = length * NODE_SIZE + sizeof(binary_tree);
   binary_tree *const tree_obj = malloc(REQUIRED_MEM);
+  /* Increment past the tree's data. */
   bt_node *const nodes_mem = (void *)(tree_obj + 1);
   if (tree_obj == NULL) return NULL;
 
@@ -22,18 +23,16 @@ binary_tree *_new_binary_tree(const void *const data, const size_t elem_size,
   for (size_t i = 0; i < length; i++) {
     bt_node *const cur_node = (void *)((char *)nodes_mem + i * NODE_SIZE);
     bt_node *parent_node;
-    void *const cur_node_data = (char *)cur_node + sizeof(bt_node);
     if (i == 0)
       parent_node = NULL;
     else {
-      /* Ensures all odd nodes become the left child of `parent_node`. */
-      parent_node = (void *)((char *)cur_node - NODE_SIZE * (!(i & 1) + 1));
-      printf("diff: %lld\n", ((char*)parent_node - (char*)nodes_mem));
+      parent_node = (void *)((char *)cur_node - NODE_SIZE * (i / 2 + 1));
       if (i & 1)
         parent_node->left = cur_node;
       else
         parent_node->right = cur_node;
     }
+    void *const cur_node_data = (char *)cur_node + sizeof(bt_node);
     memcpy(cur_node_data, (char *)data + i * elem_size, elem_size);
     cur_node->value = cur_node_data;
     cur_node->parent = parent_node;
@@ -58,14 +57,6 @@ bt_node *unparent_node(binary_tree *const src, bt_node *const target);
 int main(void) {
   static const int data[] = {1, 2, 3, 4, 5, 6, 7};
   binary_tree *a = new_binary_tree(data, sizeof data / sizeof *data);
-  printf("%d\n", *(int *)a->root->value);                // 1 (works)
-  printf("%d\n", *(int *)a->root->left->value);          // 2 (works)
-  printf("%d\n", *(int *)a->root->right->value);         // 3 (works)
-  printf("%lld", (ptrdiff_t)((char*)a->root - (char*)a->root->left->left));
-  printf("%d\n", *(int *)a->root->left->left->value);    // 4
-  printf("%d\n", *(int *)a->root->left->right->value);   // 5
-  printf("%d\n", *(int *)a->root->right->left->value);   // 6
-  printf("%d\n", *(int *)a->root->right->right->value);  // 7
 
   return 0;
 }
