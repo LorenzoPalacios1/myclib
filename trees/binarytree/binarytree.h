@@ -38,7 +38,7 @@ typedef struct {
  *       /   \
  *      4     9
  *     / \   / \
- *    3   1 0   0
+ *    3   0 1   0
  */
 binary_tree *_new_binary_tree(const void *data, size_t elem_size,
                               size_t length);
