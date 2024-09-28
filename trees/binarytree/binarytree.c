@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include <vadefs.h>
 
 #include "../trees.h"
 
@@ -61,6 +62,27 @@ bt_node *remove_node_from_tree(binary_tree *const tree, bt_node *target) {
   tree->used_allocation -= tree->node_size;
   memcpy(removed_copy, target, tree->node_size);
   return removed_copy;
+}
+
+void iterate_over_ancestry(bt_node *const origin,
+                            void (*op)(bt_node *node, va_list *args),
+                            va_list *const args) {
+  bt_node *cur_node = origin->left;
+  while (cur_node != NULL) {
+    op(cur_node, args);
+    if (cur_node->left == NULL)
+      cur_node = cur_node->right;
+    else
+      cur_node = cur_node->left;
+  }
+  cur_node = origin->right;
+  while (cur_node != NULL) {
+    op(cur_node, args);
+    if (cur_node->left == NULL)
+      cur_node = cur_node->right;
+    else
+      cur_node = cur_node->left;
+  }
 }
 
 /*
