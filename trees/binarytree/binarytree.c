@@ -1,7 +1,6 @@
 #include "binarytree.h"
 
 #include <stddef.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -18,7 +17,7 @@ binary_tree *_new_binary_tree(const void *const data, const size_t elem_size,
 
   tree_obj->num_nodes = length;
   tree_obj->node_size = NODE_SIZE;
-  tree_obj->allocation = REQUIRED_MEM;
+  tree_obj->used_allocation = tree_obj->allocation = REQUIRED_MEM;
 
   for (size_t i = 0; i < length; i++) {
     bt_node *const cur_node = (void *)((char *)nodes_mem + i * NODE_SIZE);
@@ -52,11 +51,26 @@ void delete_binary_tree_s(binary_tree **const tree) {
   delete_binary_tree(tree);
 }
 
-bt_node *unparent_node(binary_tree *const src, bt_node *const target);
+bt_node *remove_node_from_tree(binary_tree *const tree, bt_node *target) {
+  bt_node *removed_copy = malloc(tree->node_size);
+  if (removed_copy == NULL) return NULL;
+  if (target->parent->left == target)
+    target->parent->left = NULL;
+  else if (target->parent->right == target)
+    target->parent->right = NULL;
+  tree->used_allocation -= tree->node_size;
+  memcpy(removed_copy, target, tree->node_size);
+  return removed_copy;
+}
 
-int main(void) {
-  static const int data[] = {1, 2, 3, 4, 5, 6, 7};
-  binary_tree *a = new_binary_tree(data, sizeof data / sizeof *data);
+void delete_node_and_ancestry(bt_node *target) {
 
-  return 0;
+}
+
+void delete_node(bt_node *target) {
+  bt_node *parent = target->parent;
+  bt_node *new_slot = parent->left;
+  while (new_slot == NULL) {
+
+  }
 }

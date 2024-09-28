@@ -17,6 +17,7 @@ typedef struct {
   size_t num_nodes;
   size_t node_size;
   size_t allocation; /* Total bytes allocated for the tree and nodes. */
+  size_t used_allocation;
 } binary_tree;
 
 /*
