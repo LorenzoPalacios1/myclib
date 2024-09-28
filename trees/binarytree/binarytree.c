@@ -52,6 +52,7 @@ void delete_binary_tree_s(binary_tree **const tree) {
   delete_binary_tree(tree);
 }
 
+/* MAY NEED REDESIGN/REWRITE */
 bt_node *remove_node_from_tree(binary_tree *const tree, bt_node *target) {
   bt_node *removed_copy = malloc(tree->node_size);
   if (removed_copy == NULL) return NULL;
@@ -64,7 +65,7 @@ bt_node *remove_node_from_tree(binary_tree *const tree, bt_node *target) {
   return removed_copy;
 }
 
-void iterate_over_ancestry(bt_node *const origin,
+void iterate_over_lineage(bt_node *const origin,
                            void (*op)(bt_node *node, va_list *args),
                            va_list *const args) {
   bt_node *cur_node = origin->left;
@@ -86,10 +87,10 @@ void iterate_over_ancestry(bt_node *const origin,
 }
 
 /*
- * Finds the longest ancestral path of `origin`. This function searches both the
+ * Finds the longest lineage of `origin`. This function searches both the
  * `left` and `right` branches of `origin`.
  *
- * \return The maximum ancestral depth of `origin`.
+ * \return The maximum depth of `origin`.
  */
 size_t get_depth(bt_node *const origin) {
   size_t left_branch_depth = 0;
@@ -113,11 +114,11 @@ size_t get_depth(bt_node *const origin) {
                                                 : right_branch_depth;
 }
 
-/* Calculates the number of ancestor nodes linked to `origin`.
+/* Calculates the number of descendant nodes linked to `origin`.
 
- * \return The total amount of ancestor nodes connected to `origin`.
+ * \return The total amount of descendant nodes connected to `origin`.
 */
-size_t get_num_ancestral_nodes(bt_node *const origin) {
+size_t count_descendant_nodes(bt_node *const origin) {
   size_t count = 0;
   for (bt_node *cur_node = origin->left; cur_node != NULL; count++) {
     if (cur_node->left == NULL)
@@ -136,7 +137,8 @@ size_t get_num_ancestral_nodes(bt_node *const origin) {
   return count;
 }
 
-void delete_node_and_ancestry(binary_tree *const tree, bt_node *target) {
+/* NEEDS REDESIGN/REWRITE */
+void delete_node_and_lineage(binary_tree *const tree, bt_node *target) {
   {
     bt_node *parent = target->parent;
     if (parent->left == target)
@@ -149,7 +151,8 @@ void delete_node_and_ancestry(binary_tree *const tree, bt_node *target) {
   tree->used_allocation -= REMOVED_NODES * tree->node_size;
 }
 
-void delete_node_and_ancestry_s(binary_tree *const tree, bt_node *target) {
+/* NEEDS REDESIGN/REWRITE */
+void delete_node_and_lineage_s(binary_tree *const tree, bt_node *target) {
   {
     bt_node *parent = target->parent;
     if (parent->left == target)
@@ -211,6 +214,7 @@ static bt_node **find_open_descendant(bt_node *const origin) {
  * there. If neither `left` or `right` are open, both `dst` and `src` will be
  * unmodified.
  */
+/* NEEDS REDESIGN/REWRITE */
 void make_node_child_of(bt_node *const src, bt_node *const dst) {
   if (dst->left == NULL) {
     dst->left = src;
@@ -233,6 +237,7 @@ void make_node_child_of(bt_node *const src, bt_node *const dst) {
  * values are `NULL`, the function will append the descendants of `dst` to the
  * `left` pointer of that candidate node.
  */
+/* NEEDS REDESIGN/REWRITE */
 void force_make_node_child_of(bt_node *const src, bt_node *const dst) {
   make_node_child_of(src, dst);
   if (src->parent == dst) return;
@@ -241,6 +246,7 @@ void force_make_node_child_of(bt_node *const src, bt_node *const dst) {
   dst->left = src;
 }
 
+/* NEEDS REDESIGN/REWRITE */
 void delete_node(bt_node *target) {
   /*
    * If the node to be deleted is part of a tree or lineage, then it will have a
