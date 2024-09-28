@@ -65,8 +65,8 @@ bt_node *remove_node_from_tree(binary_tree *const tree, bt_node *target) {
 }
 
 void iterate_over_ancestry(bt_node *const origin,
-                            void (*op)(bt_node *node, va_list *args),
-                            va_list *const args) {
+                           void (*op)(bt_node *node, va_list *args),
+                           va_list *const args) {
   bt_node *cur_node = origin->left;
   while (cur_node != NULL) {
     op(cur_node, args);
@@ -200,13 +200,18 @@ static bt_node **node_search_right(bt_node *origin, bt_node *const target) {
  * \note If this function encounters a node whose `left` and `right` pointers
  * are both `NULL`, this function will return a pointer to the `left` pointer.
  */
-static bt_node **find_open_ancestor(bt_node *const origin) {
+static bt_node **find_open_descendant(bt_node *const origin) {
   bt_node **open_slot = node_search_left(origin, NULL);
   if (open_slot == NULL) node_search_right(origin, NULL);
   return open_slot;
 }
 
-void make_node_child_of(bt_node *const dst, bt_node *const src) {
+/*
+ * Finds the first open `left` or `right` pointer in `dst` and places `src`
+ * there. If neither `left` or `right` are open, both `dst` and `src` will be
+ * unmodified.
+ */
+void make_node_child_of(bt_node *const src, bt_node *const dst) {
   if (dst->left == NULL) {
     dst->left = src;
     return;
@@ -217,4 +222,40 @@ void make_node_child_of(bt_node *const dst, bt_node *const src) {
   }
 }
 
-void delete_node(bt_node *target) { bt_node *parent = target->parent; }
+/*
+ * Finds the first open `left` or `right` pointer in `dst` and places `src`
+ * there. If neither `left` or `right` are open, `dst->left` and its
+ * descendants will be appended to the last open slot in the lineage of `src`
+ * and `src` will overwrite `dst->left`.
+ *
+ * \note If `dst->left` must be appended to the lineage of `src` and a candidate
+ * node in the descendants of `src` is found whose `left` and `right` pointer
+ * values are `NULL`, the function will append the descendants of `dst` to the
+ * `left` pointer of that candidate node.
+ */
+void force_make_node_child_of(bt_node *const src, bt_node *const dst) {
+  make_node_child_of(src, dst);
+  if (src->parent == dst) return;
+  bt_node **open_candidate = find_open_descendant(src);
+  *open_candidate = dst->left;
+  dst->left = src;
+}
+
+void delete_node(bt_node *target) {
+  /*
+   * If the node to be deleted is part of a tree or lineage, then it will have a
+   * parent. In this case, we can just set the parent's pointer to the target
+   * node to NULL, thereby flagging it as open.
+   */
+  bt_node *parent = target->parent;
+  if (parent != NULL) {
+    if (parent->left == target)
+      parent->left = NULL;
+    else
+      parent->right = NULL;
+    return;
+  }
+  /* If the node has no parent, assume it is a freestanding node with no
+   * children. */
+  free(target);
+}
