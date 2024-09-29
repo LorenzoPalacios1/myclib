@@ -19,6 +19,7 @@ binary_tree *_new_binary_tree(const void *const data, const size_t elem_size,
   tree_obj->num_nodes = length;
   tree_obj->node_size = NODE_SIZE;
   tree_obj->used_allocation = tree_obj->allocation = REQUIRED_MEM;
+  tree_obj->open_nodes = NULL;
 
   for (size_t i = 0; i < length; i++) {
     bt_node *const cur_node = (void *)((char *)nodes_mem + i * NODE_SIZE);
@@ -53,21 +54,26 @@ void delete_binary_tree_s(binary_tree **const tree) {
 }
 
 /* MAY NEED REDESIGN/REWRITE */
-bt_node *remove_node_from_tree(binary_tree *const tree, bt_node *target) {
-  bt_node *removed_copy = malloc(tree->node_size);
-  if (removed_copy == NULL) return NULL;
-  if (target->parent->left == target)
-    target->parent->left = NULL;
-  else if (target->parent->right == target)
-    target->parent->right = NULL;
+bt_node *remove_node_from_tree(binary_tree *const tree, bt_node *const target) {
+  bt_node *const node_copy = malloc(tree->node_size);
+  if (node_copy == NULL) return NULL;
+  bt_node *parent = target->parent;
+  bt_node *original_node_pos;
+  if (parent->left == target) {
+    original_node_pos = parent->left;
+    parent->left = NULL;
+  } else if (target->parent->right == target) {
+    original_node_pos = parent->right;
+    parent->right = NULL;
+  }
   tree->used_allocation -= tree->node_size;
-  memcpy(removed_copy, target, tree->node_size);
-  return removed_copy;
+  memcpy(node_copy, target, tree->node_size);
+  return node_copy;
 }
 
 void iterate_over_lineage(bt_node *const origin,
-                           void (*op)(bt_node *node, va_list *args),
-                           va_list *const args) {
+                          void (*op)(bt_node *node, va_list *args),
+                          va_list *const args) {
   bt_node *cur_node = origin->left;
   while (cur_node != NULL) {
     op(cur_node, args);
@@ -171,7 +177,7 @@ void delete_node_and_lineage_s(binary_tree *const tree, bt_node *target) {
  *
  * \return A pointer to `target` or `NULL` if `target` was not found.
  */
-static bt_node **node_search_left(bt_node *origin, bt_node *const target) {
+bt_node **node_search_left(bt_node *origin, bt_node *const target) {
   while (origin != NULL) {
     if (origin->left == target) return &origin->left;
     if (origin->right == target) return &origin->right;
@@ -186,13 +192,36 @@ static bt_node **node_search_left(bt_node *origin, bt_node *const target) {
  *
  * \return A pointer to `target` or `NULL` if `target` was not found.
  */
-static bt_node **node_search_right(bt_node *origin, bt_node *const target) {
+bt_node **node_search_right(bt_node *origin, bt_node *const target) {
   while (origin != NULL) {
     if (origin->left == target) return &origin->left;
     if (origin->right == target) return &origin->right;
     origin = origin->right;
   }
   return &target->right;
+}
+
+binary_tree *resize_tree(binary_tree *const tree, const size_t new_size) {
+  binary_tree *const new_tree = realloc(tree, new_size);
+  if (new_tree == NULL) return NULL;
+  
+}
+
+static bt_node *add_open_node(binary_tree *const tree) {
+  const size_t ALLOCATION = tree->allocation;
+  const size_t USED_ALLOCATION = tree->used_allocation;
+  const size_t NODE_SIZE = tree->node_size;
+  const bt_node *open_nodes = tree->open_nodes;
+  if (open_nodes == NULL)
+    if (ALLOCATION - USED_ALLOCATION < NODE_SIZE) {
+
+    }
+}
+
+static bt_node *get_next_open_node(binary_tree *const tree) {
+  if (tree->num_open_nodes == 0)
+    return NULL;
+  if (tree->open_nodes)
 }
 
 /*
@@ -203,7 +232,7 @@ static bt_node **node_search_right(bt_node *origin, bt_node *const target) {
  * \note If this function encounters a node whose `left` and `right` pointers
  * are both `NULL`, this function will return a pointer to the `left` pointer.
  */
-static bt_node **find_open_descendant(bt_node *const origin) {
+bt_node **find_open_descendant(bt_node *const origin) {
   bt_node **open_slot = node_search_left(origin, NULL);
   if (open_slot == NULL) node_search_right(origin, NULL);
   return open_slot;

@@ -14,6 +14,8 @@ typedef struct bt_node {
 /* Container structure for a binary tree data structure. */
 typedef struct {
   bt_node *root;
+  bt_node *open_nodes;
+  size_t num_open_nodes;
   size_t num_nodes;
   size_t node_size;
   size_t allocation; /* Total bytes allocated for the tree and nodes. */
