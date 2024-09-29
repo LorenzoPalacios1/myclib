@@ -22,7 +22,7 @@ binary_tree *_new_binary_tree(const void *const data, const size_t elem_size,
   tree_obj->num_nodes = length;
   tree_obj->node_size = NODE_SIZE;
   tree_obj->used_allocation = tree_obj->allocation = REQUIRED_MEM;
-  tree_obj->open_nodes = NULL;
+  init_open_nodes(tree_obj);
 
   for (size_t i = 0; i < length; i++) {
     bt_node *const cur_node = (void *)((char *)nodes_mem + i * NODE_SIZE);
@@ -188,7 +188,7 @@ binary_tree *resize_tree(binary_tree *const tree, const size_t new_size) {
   return new_tree;
 }
 
-binary_tree *resize_tree_s(binary_tree *const tree, const size_t new_size) {
+binary_tree *resize_tree_s(binary_tree *tree, const size_t new_size) {
   if (new_size < tree->used_allocation) {
     const size_t NODES_AFFECTED =
         tree->num_nodes - (new_size - sizeof(*tree)) / tree->node_size;
@@ -197,6 +197,10 @@ binary_tree *resize_tree_s(binary_tree *const tree, const size_t new_size) {
     for (size_t i = 0; i < NODES_AFFECTED; i++) {
       bt_node *cur_node =
           (void *)((char *)tree->root + (NUM_NODES - i - 1) * NODE_SIZE);
+      if (tree->open_nodes != NULL) {
+        tree = add_open_node(tree, cur_node);
+        if (tree == NULL) return NULL;
+      }
       delete_node_from_tree(tree, cur_node);
     }
   }
@@ -219,18 +223,26 @@ binary_tree *add_open_node(binary_tree *tree, bt_node *const open_node) {
     if (resized_tree == NULL) return NULL;
     tree = resized_tree;
   }
-  bt_node **stack_terminator =
+  /*
+   * This direct access of tree->open_nodes exists for two reasons:
+   * 1. This gives the address of the `NULL` terminating pointer in
+   * `tree->open_node`.
+   * 2. This will not modify `tree->open_nodes` and will therefore not interfere
+   * with any code reliant upon `tree->open_nodes`, such as `get_open_node`.
+   */
+  const bt_node **stack_terminator =
       (void *)((char *)tree + tree->used_allocation - sizeof(tree->open_nodes));
-  
+  *stack_terminator = open_node;
+  *(stack_terminator + 1) = NULL;
+  tree->used_allocation += sizeof(tree->open_nodes);
 }
 
 binary_tree *init_open_nodes(binary_tree *tree) {
   const size_t ALLOCATION = tree->allocation;
   const size_t USED_ALLOCATION = tree->used_allocation;
   if (ALLOCATION - USED_ALLOCATION < sizeof(bt_node *)) {
-    binary_tree *resized_tree = expand_tree(tree);
-    if (resized_tree == NULL) return NULL;
-    tree = resized_tree;
+    tree = expand_tree(tree);
+    if (tree == NULL) return NULL;
   }
   tree->open_nodes = (void *)((char *)tree + USED_ALLOCATION);
   *tree->open_nodes = NULL;
@@ -238,8 +250,8 @@ binary_tree *init_open_nodes(binary_tree *tree) {
   return tree;
 }
 
-/* TO-DO */
-bt_node *get_next_open_node(binary_tree *const tree) {
+/* write documentation */
+bt_node *get_open_node(binary_tree *const tree) {
   if (tree->open_nodes == NULL) return NULL;
   return *(tree->open_nodes++);
 }

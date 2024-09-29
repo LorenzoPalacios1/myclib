@@ -118,7 +118,7 @@ void force_make_node_child_of(bt_node *const src, bt_node *const dst);
  */
 size_t get_depth(bt_node *origin);
 
-bt_node *get_next_open_node(binary_tree *tree);
+bt_node *get_open_node(binary_tree *tree);
 
 void iterate_over_lineage(bt_node *origin,
                           void (*op)(bt_node *node, va_list *args),
