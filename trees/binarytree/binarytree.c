@@ -173,7 +173,6 @@ void delete_node_from_tree(binary_tree *const tree, bt_node *const target) {
       parent->left = NULL;
     else
       parent->right = NULL;
-    add_open_node(tree, target);
   }
 }
 
@@ -202,53 +201,55 @@ binary_tree *resize_tree_s(binary_tree *const tree, const size_t new_size) {
     }
   }
 
-  return resize_tree(tree, new_size);
+  binary_tree *new_tree = resize_tree(tree, new_size);
+  if (new_tree == NULL) return NULL;
+
+  return new_tree;
 }
 
 binary_tree *expand_tree(binary_tree *const tree) {
   return resize_tree(tree, tree->allocation * BT_REALLOC_FACTOR);
 }
 
-/* TO-DO */
-bt_node *add_open_node(binary_tree *const tree,
-                       const bt_node *const open_node) {
+binary_tree *add_open_node(binary_tree *tree, bt_node *const open_node) {
   const size_t ALLOCATION = tree->allocation;
   const size_t USED_ALLOCATION = tree->used_allocation;
-  const size_t NODE_SIZE = tree->node_size;
-  const bt_node *open_nodes = tree->open_nodes;
-  if (open_nodes == NULL) {
-    if (ALLOCATION - USED_ALLOCATION < sizeof(bt_node *)) {
-    }
+  if (ALLOCATION - USED_ALLOCATION < sizeof(bt_node *)) {
+    binary_tree *resized_tree = expand_tree(tree);
+    if (resized_tree == NULL) return NULL;
+    tree = resized_tree;
   }
-  return NULL;
+  bt_node **stack_terminator =
+      (void *)((char *)tree + tree->used_allocation - sizeof(tree->open_nodes));
+  
+}
+
+binary_tree *init_open_nodes(binary_tree *tree) {
+  const size_t ALLOCATION = tree->allocation;
+  const size_t USED_ALLOCATION = tree->used_allocation;
+  if (ALLOCATION - USED_ALLOCATION < sizeof(bt_node *)) {
+    binary_tree *resized_tree = expand_tree(tree);
+    if (resized_tree == NULL) return NULL;
+    tree = resized_tree;
+  }
+  tree->open_nodes = (void *)((char *)tree + USED_ALLOCATION);
+  *tree->open_nodes = NULL;
+  tree->used_allocation += sizeof(tree->open_nodes);
+  return tree;
 }
 
 /* TO-DO */
 bt_node *get_next_open_node(binary_tree *const tree) {
-  if (tree->num_open_nodes == 0) return NULL;
-  if (tree->open_nodes)
-    ;
-  return NULL;
+  if (tree->open_nodes == NULL) return NULL;
+  return *(tree->open_nodes++);
 }
-/*
- * Finds the first open slot (that is, a `left` or `right` pointer whose value
- * is `NULL`) in a branch of nodes.
- *
- * \return A pointer to an open slot.
- * \note If this function encounters a node whose `left` and `right` pointers
- * are both `NULL`, this function will return a pointer to the `left` pointer.
- */
+
 bt_node **find_open_descendant(bt_node *const origin) {
   bt_node **open_slot = search_left_lineage(origin, NULL);
   if (open_slot == NULL) search_right_lineage(origin, NULL);
   return open_slot;
 }
 
-/*
- * Finds the first open `left` or `right` pointer in `dst` and places `src`
- * there. If neither `left` or `right` are open, both `dst` and `src` will be
- * unmodified.
- */
 /* NEEDS REDESIGN/REWRITE */
 void make_node_child_of(bt_node *const src, bt_node *const dst) {
   if (dst->left == NULL) {
@@ -261,17 +262,6 @@ void make_node_child_of(bt_node *const src, bt_node *const dst) {
   }
 }
 
-/*
- * Finds the first open `left` or `right` pointer in `dst` and places `src`
- * there. If neither `left` or `right` are open, `dst->left` and its
- * descendants will be appended to the last open slot in the lineage of `src`
- * and `src` will overwrite `dst->left`.
- *
- * \note If `dst->left` must be appended to the lineage of `src` and a candidate
- * node in the descendants of `src` is found whose `left` and `right` pointer
- * values are `NULL`, the function will append the descendants of `dst` to the
- * `left` pointer of that candidate node.
- */
 /* NEEDS REDESIGN/REWRITE */
 void force_make_node_child_of(bt_node *const src, bt_node *const dst) {
   make_node_child_of(src, dst);
@@ -284,8 +274,9 @@ void force_make_node_child_of(bt_node *const src, bt_node *const dst) {
 int main(void) {
   const size_t data[] = {1, 2, 3, 4, 5};
   binary_tree *a = new_binary_tree(data, sizeof(data) / sizeof(*data));
-  printf("%zu\n", a->allocation);
+  printf("%td\n", (ptrdiff_t)a->root->left);
   a = resize_tree_s(a, a->allocation - 36 * 4);
-  printf("%zu\n", a->allocation);
+  printf("%td\n", (ptrdiff_t)a->root->left);
+
   return 0;
 }

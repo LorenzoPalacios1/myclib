@@ -15,8 +15,7 @@ typedef struct bt_node {
 /* Container structure for a binary tree data structure. */
 typedef struct {
   bt_node *root;
-  bt_node *open_nodes;
-  size_t num_open_nodes;
+  bt_node **open_nodes;
   size_t num_nodes;
   size_t node_size;
   size_t allocation; /* Total bytes allocated for the tree and nodes. */
@@ -54,7 +53,14 @@ binary_tree *_new_binary_tree(const void *data, size_t elem_size,
  */
 bt_node *add_binary_node(binary_tree *tree, const void *elem);
 
-bt_node *add_open_node(binary_tree *tree, const bt_node *open_node);
+/*
+ * Registers `open_node` as an open block of memory in `tree` for any new
+ * incoming nodes to fill.
+ *
+ * \return A (potentially new) pointer associated with the contents of `tree`
+ * or `NULL` upon failure.
+ */
+binary_tree *add_open_node(binary_tree *tree, bt_node *open_node);
 
 /*
  * Calculates the number of descendant nodes linked to `origin`.
@@ -81,9 +87,28 @@ void delete_node_from_tree(binary_tree *tree, bt_node *target);
 
 binary_tree *expand_tree(binary_tree *tree);
 
+/*
+ * Finds the first open slot (that is, a `left` or `right` pointer whose value
+ * is `NULL`) in a branch of nodes.
+ *
+ * \return A pointer to an open slot.
+ * \note If this function encounters a node whose `left` and `right` pointers
+ * are both `NULL`, this function will return a pointer to the `left` pointer.
+ */
 bt_node **find_open_descendant(bt_node *origin);
 
-void force_make_node_child_of(bt_node *src, bt_node *dst);
+/*
+ * Finds the first open `left` or `right` pointer in `dst` and places `src`
+ * there. If neither `left` or `right` are open, `dst->left` and its
+ * descendants will be appended to the last open slot in the lineage of `src`
+ * and `src` will overwrite `dst->left`.
+ *
+ * \note If `dst->left` must be appended to the lineage of `src` and a candidate
+ * node in the descendants of `src` is found whose `left` and `right` pointer
+ * values are `NULL`, the function will append the descendants of `dst` to the
+ * `left` pointer of that candidate node.
+ */
+void force_make_node_child_of(bt_node *const src, bt_node *const dst);
 
 /*
  * Finds the longest lineage of `origin`. This function searches both the
@@ -99,6 +124,28 @@ void iterate_over_lineage(bt_node *origin,
                           void (*op)(bt_node *node, va_list *args),
                           va_list *args);
 
+/*
+ * Initializes a rudimentary stack in `tree` which contains pointers to any open
+ * blocks of memory left behind from removing or deleting nodes.
+ *
+ * This can also be used to reset a stack of open nodes, although if this
+ * function is called with a binary tree whose `open_nodes` is not yet
+ * exhausted, memory leaks can occur as the pointers to any open blocks of
+ * memory may be lost.
+ *
+ * \return A (potentially new) pointer associated with the contents of `tree`
+ * or `NULL` upon failure.
+ * \note The current implementation allocates this stack at the end of the
+ * allocated memory for `tree`. Additionally, if this function returns `NULL`,
+ * then no stack has been allocated.
+ */
+binary_tree *init_open_nodes(binary_tree *tree);
+
+/*
+ * Finds the first open `left` or `right` pointer in `dst` and places `src`
+ * there. If neither `left` or `right` are open, both `dst` and `src` will be
+ * unmodified.
+ */
 void make_node_child_of(bt_node *src, bt_node *dst);
 
 bt_node *remove_node_from_tree(binary_tree *tree, bt_node *target);
@@ -127,12 +174,6 @@ binary_tree *resize_tree(binary_tree *tree, size_t new_size);
  * still remove the would-be corrupted nodes from the tree.
  */
 binary_tree *resize_tree_s(binary_tree *tree, size_t new_size);
-
-/*
- * This function makes `child` a child node of `parent`, including any child
- * nodes.
- */
-void reparent_binary_node(const bt_node *parent, const bt_node *child);
 
 /*
  * Searches along the `left` lineage of `origin` until `target` pointer is
