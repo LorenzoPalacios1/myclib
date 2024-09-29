@@ -1,12 +1,12 @@
 #include "binarytree.h"
 
 #include <stddef.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <vadefs.h>
 
 #include "../trees.h"
-#include <stdio.h>
 binary_tree *_new_binary_tree(const void *const data, const size_t elem_size,
                               const size_t length) {
   const size_t NODE_SIZE = sizeof(bt_node) + elem_size;
@@ -196,15 +196,58 @@ bt_node **node_search_right(bt_node *origin, bt_node *const target) {
   return &target->right;
 }
 
+/*
+ * Resizes the memory allocated for `tree` to `new_size`.
+ *
+ * \return A (potentially new) pointer associated with the contents of `tree`
+ * or `NULL` upon failure.
+ * \note If `new_size` is less than `tree->used_allocation`, then tree data can
+ * be corrupted. If this can occur, consider using `resize_tree_s()`.
+ */
 binary_tree *resize_tree(binary_tree *const tree, const size_t new_size) {
   binary_tree *const new_tree = realloc(tree, new_size);
   if (new_tree == NULL) return NULL;
-  new_tree->allocation = new_size;
-
   if (new_size < new_tree->used_allocation) {
     new_tree->used_allocation = new_size;
-    new_tree->num_nodes = (new_size - sizeof(*tree)) / new_tree->node_size;
+    new_tree->num_nodes = (new_size - sizeof(*new_tree)) / new_tree->node_size;
   }
+  new_tree->allocation = new_size;
+
+  return new_tree;
+}
+
+/*
+ * Resizes the memory allocated for `tree` to `new_size`.
+ *
+ * For any node corrupted as a result of a resize, that node's parent will no
+ * longer maintain a `left` or `right` pointer to that node. Instead, the value
+ * of `left` or `right` associated with the corrupted node will be `NULL`.
+ *
+ * \return A (potentially new) pointer associated with the contents of `tree`
+ * or `NULL` upon failure.
+ * \note Use caution when resizing a tree to a smaller size. If reallocation
+ * fails and the requested tree size would corrupt nodes, this function will
+ * still remove the would-be corrupted nodes from the tree.
+ */
+binary_tree *resize_tree_s(binary_tree *const tree, const size_t new_size) {
+  if (new_size < tree->used_allocation) {
+    const size_t NODES_AFFECTED =
+        tree->num_nodes - (new_size - sizeof(*tree)) / tree->node_size;
+    printf("%zu\n", NODES_AFFECTED);
+    for (size_t i = 0; i < NODES_AFFECTED; i++) {
+      bt_node *cur_node = tree->root + tree->num_nodes - i - 1;
+      printf("%d\n", *(int*)tree->root->value);
+      printf("%d\n", *(int*)cur_node->value);
+      exit(0);
+      bt_node *parent = cur_node->parent;
+      if (cur_node == parent->left)
+        parent->left = NULL;
+      else
+        parent->right = NULL;
+    }
+  }
+  binary_tree *const new_tree = resize_tree(tree, new_size);
+  if (new_tree == NULL) return NULL;
 
   return new_tree;
 }
@@ -226,7 +269,7 @@ static bt_node *get_next_open_node(binary_tree *const tree) {
   if (tree->num_open_nodes == 0) return NULL;
   if (tree->open_nodes)
     ;
-  return NULL; 
+  return NULL;
 }
 /*
  * Finds the first open slot (that is, a `left` or `right` pointer whose value
@@ -300,10 +343,14 @@ void delete_node(bt_node *target) {
 }
 
 int main(void) {
-  const int data[] = {1, 2, 3, 4, 5};
+  const int data[] = {1, 2, 3};
   binary_tree *a = new_binary_tree(data, sizeof(data) / sizeof(*data));
-  printf("%zu\n", a->used_allocation);
-  a = resize_tree(a, a->allocation * 10);
-  printf("%zu\n", a->used_allocation);
+  printf("%d", *(int*)a->root->value);
+  printf("%d", *(int*)a->root->left->value);
+  printf("%d", *(int *)a->root->right->value);
+  exit(0);
+  printf("%zu\n", a->allocation);
+  a = resize_tree_s(a, a->allocation -36);
+  printf("%zu\n", a->allocation);
   return 0;
 }
