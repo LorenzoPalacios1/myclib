@@ -2,6 +2,7 @@
 #define BINARYTREE_H
 
 #include <stddef.h>
+#include <vadefs.h>
 
 #include "../trees.h"
 
@@ -48,6 +49,21 @@ binary_tree *_new_binary_tree(const void *data, size_t elem_size,
                               size_t length);
 
 /*
+ * Adds the specified element as a child node of `parent_node`.
+ * \return A pointer to the added node, or NULL upon failure.
+ */
+bt_node *add_binary_node(binary_tree *tree, const void *elem);
+
+bt_node *add_open_node(binary_tree *tree, const bt_node *open_node);
+
+/*
+ * Calculates the number of descendant nodes linked to `origin`.
+ *
+ * \return The total amount of descendant nodes connected to `origin`.
+ */
+size_t count_descendant_nodes(bt_node *origin);
+
+/*
  * Frees the passed binary tree's consumed memory and reassigns its pointer
  * to `NULL`.
  */
@@ -59,23 +75,78 @@ void delete_binary_tree(binary_tree **tree);
  */
 void delete_binary_tree_s(binary_tree **tree);
 
-/*
- * Adds the specified element as a child node of `parent_node`.
- * \return A pointer to the added node, or NULL upon failure.
- */
-bt_node *add_binary_node(binary_tree *tree, const void *elem);
+void delete_node_and_lineage(binary_tree *tree, bt_node *target);
+
+void delete_node_from_tree(binary_tree *tree, bt_node *target);
+
+binary_tree *expand_tree(binary_tree *tree);
+
+bt_node **find_open_descendant(bt_node *origin);
+
+void force_make_node_child_of(bt_node *src, bt_node *dst);
 
 /*
- * Removes `target` from `src`, thereby causing `target` to have no parent
- * (assumed `NULL`).
+ * Finds the longest lineage of `origin`. This function searches both the
+ * `left` and `right` branches of `origin`.
  *
- * \return The removed node.
+ * \return The maximum depth of `origin`.
  */
-bt_node *remove_binary_node(binary_tree *src, bt_node *target);
+size_t get_depth(bt_node *origin);
+
+bt_node *get_next_open_node(binary_tree *tree);
+
+void iterate_over_lineage(bt_node *origin,
+                          void (*op)(bt_node *node, va_list *args),
+                          va_list *args);
+
+void make_node_child_of(bt_node *src, bt_node *dst);
+
+bt_node *remove_node_from_tree(binary_tree *tree, bt_node *target);
+
+/*
+ * Resizes the memory allocated for `tree` to `new_size`.
+ *
+ * \return A (potentially new) pointer associated with the contents of `tree`
+ * or `NULL` upon failure.
+ * \note If `new_size` is less than `tree->used_allocation`, then tree data can
+ * be corrupted. If this can occur, consider using `resize_tree_s()`.
+ */
+binary_tree *resize_tree(binary_tree *tree, size_t new_size);
+
+/*
+ * Resizes the memory allocated for `tree` to `new_size`.
+ *
+ * For any node corrupted as a result of a resize, that node's parent will no
+ * longer maintain a `left` or `right` pointer to that node. Instead, the value
+ * of `left` or `right` associated with the corrupted node will be `NULL`.
+ *
+ * \return A (potentially new) pointer associated with the contents of `tree`
+ * or `NULL` upon failure.
+ * \note Use caution when resizing a tree to a smaller size. If reallocation
+ * fails and the requested tree size would corrupt nodes, this function will
+ * still remove the would-be corrupted nodes from the tree.
+ */
+binary_tree *resize_tree_s(binary_tree *tree, size_t new_size);
 
 /*
  * This function makes `child` a child node of `parent`, including any child
  * nodes.
  */
 void reparent_binary_node(const bt_node *parent, const bt_node *child);
+
+/*
+ * Searches along the `left` lineage of `origin` until `target` pointer is
+ * found.
+ *
+ * \return A pointer to `target` or `NULL` if `target` was not found.
+ */
+bt_node **search_left_lineage(bt_node *origin, bt_node *target);
+
+/*
+ * Searches along the `right` ancestors of `origin` until `target` pointer is
+ * found.
+ *
+ * \return A pointer to `target` or `NULL` if `target` was not found.
+ */
+bt_node **search_right_lineage(bt_node *origin, bt_node *target);
 #endif

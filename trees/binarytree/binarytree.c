@@ -7,6 +7,9 @@
 #include <vadefs.h>
 
 #include "../trees.h"
+
+#define BT_REALLOC_FACTOR (2)
+
 binary_tree *_new_binary_tree(const void *const data, const size_t elem_size,
                               const size_t length) {
   const size_t NODE_SIZE = sizeof(bt_node) + elem_size;
@@ -70,7 +73,7 @@ bt_node *remove_node_from_tree(binary_tree *const tree, bt_node *const target) {
 }
 
 void iterate_over_lineage(bt_node *const origin,
-                          void (*op)(bt_node *node, va_list *args),
+                          void (*const op)(bt_node *node, va_list *args),
                           va_list *const args) {
   bt_node *cur_node = origin->left;
   while (cur_node != NULL) {
@@ -90,12 +93,6 @@ void iterate_over_lineage(bt_node *const origin,
   }
 }
 
-/*
- * Finds the longest lineage of `origin`. This function searches both the
- * `left` and `right` branches of `origin`.
- *
- * \return The maximum depth of `origin`.
- */
 size_t get_depth(bt_node *const origin) {
   size_t left_branch_depth = 0;
   for (bt_node *cur_node = origin->left; cur_node != NULL;
@@ -118,10 +115,6 @@ size_t get_depth(bt_node *const origin) {
                                                 : right_branch_depth;
 }
 
-/* Calculates the number of descendant nodes linked to `origin`.
-
- * \return The total amount of descendant nodes connected to `origin`.
-*/
 size_t count_descendant_nodes(bt_node *const origin) {
   size_t count = 0;
   for (bt_node *cur_node = origin->left; cur_node != NULL; count++) {
@@ -155,24 +148,7 @@ void delete_node_and_lineage(binary_tree *const tree, bt_node *target) {
   tree->used_allocation -= REMOVED_NODES * tree->node_size;
 }
 
-/* NEEDS REDESIGN/REWRITE */
-void delete_node_and_lineage_s(binary_tree *const tree, bt_node *target) {
-  {
-    bt_node *parent = target->parent;
-    if (parent->left == target)
-      parent->left = NULL;
-    else if (parent->right == target)
-      parent->right = NULL;
-  }
-}
-
-/*
- * Searches along the `left` ancestors of `origin` until `target` pointer is
- * found.
- *
- * \return A pointer to `target` or `NULL` if `target` was not found.
- */
-bt_node **node_search_left(bt_node *origin, bt_node *const target) {
+bt_node **search_left_lineage(bt_node *origin, bt_node *const target) {
   while (origin != NULL) {
     if (origin->left == target) return &origin->left;
     if (origin->right == target) return &origin->right;
@@ -181,13 +157,7 @@ bt_node **node_search_left(bt_node *origin, bt_node *const target) {
   return NULL;
 }
 
-/*
- * Searches along the `right` ancestors of `origin` until `target` pointer is
- * found.
- *
- * \return A pointer to `target` or `NULL` if `target` was not found.
- */
-bt_node **node_search_right(bt_node *origin, bt_node *const target) {
+bt_node **search_right_lineage(bt_node *origin, bt_node *const target) {
   while (origin != NULL) {
     if (origin->left == target) return &origin->left;
     if (origin->right == target) return &origin->right;
@@ -196,14 +166,17 @@ bt_node **node_search_right(bt_node *origin, bt_node *const target) {
   return &target->right;
 }
 
-/*
- * Resizes the memory allocated for `tree` to `new_size`.
- *
- * \return A (potentially new) pointer associated with the contents of `tree`
- * or `NULL` upon failure.
- * \note If `new_size` is less than `tree->used_allocation`, then tree data can
- * be corrupted. If this can occur, consider using `resize_tree_s()`.
- */
+void delete_node_from_tree(binary_tree *const tree, bt_node *const target) {
+  bt_node *const parent = target->parent;
+  if (parent != NULL) {
+    if (parent->left == target)
+      parent->left = NULL;
+    else
+      parent->right = NULL;
+    add_open_node(tree, target);
+  }
+}
+
 binary_tree *resize_tree(binary_tree *const tree, const size_t new_size) {
   binary_tree *const new_tree = realloc(tree, new_size);
   if (new_tree == NULL) return NULL;
@@ -216,56 +189,42 @@ binary_tree *resize_tree(binary_tree *const tree, const size_t new_size) {
   return new_tree;
 }
 
-/*
- * Resizes the memory allocated for `tree` to `new_size`.
- *
- * For any node corrupted as a result of a resize, that node's parent will no
- * longer maintain a `left` or `right` pointer to that node. Instead, the value
- * of `left` or `right` associated with the corrupted node will be `NULL`.
- *
- * \return A (potentially new) pointer associated with the contents of `tree`
- * or `NULL` upon failure.
- * \note Use caution when resizing a tree to a smaller size. If reallocation
- * fails and the requested tree size would corrupt nodes, this function will
- * still remove the would-be corrupted nodes from the tree.
- */
 binary_tree *resize_tree_s(binary_tree *const tree, const size_t new_size) {
   if (new_size < tree->used_allocation) {
     const size_t NODES_AFFECTED =
         tree->num_nodes - (new_size - sizeof(*tree)) / tree->node_size;
-    printf("%zu\n", NODES_AFFECTED);
+    const size_t NODE_SIZE = tree->node_size;
+    const size_t NUM_NODES = tree->num_nodes;
     for (size_t i = 0; i < NODES_AFFECTED; i++) {
-      bt_node *cur_node = tree->root + tree->num_nodes - i - 1;
-      printf("%d\n", *(int*)tree->root->value);
-      printf("%d\n", *(int*)cur_node->value);
-      exit(0);
-      bt_node *parent = cur_node->parent;
-      if (cur_node == parent->left)
-        parent->left = NULL;
-      else
-        parent->right = NULL;
+      bt_node *cur_node =
+          (void *)((char *)tree->root + (NUM_NODES - i - 1) * NODE_SIZE);
+      delete_node_from_tree(tree, cur_node);
     }
   }
-  binary_tree *const new_tree = resize_tree(tree, new_size);
-  if (new_tree == NULL) return NULL;
 
-  return new_tree;
+  return resize_tree(tree, new_size);
+}
+
+binary_tree *expand_tree(binary_tree *const tree) {
+  return resize_tree(tree, tree->allocation * BT_REALLOC_FACTOR);
 }
 
 /* TO-DO */
-static bt_node *add_open_node(binary_tree *const tree) {
+bt_node *add_open_node(binary_tree *const tree,
+                       const bt_node *const open_node) {
   const size_t ALLOCATION = tree->allocation;
   const size_t USED_ALLOCATION = tree->used_allocation;
   const size_t NODE_SIZE = tree->node_size;
   const bt_node *open_nodes = tree->open_nodes;
-  if (open_nodes == NULL)
-    if (ALLOCATION - USED_ALLOCATION < NODE_SIZE) {
+  if (open_nodes == NULL) {
+    if (ALLOCATION - USED_ALLOCATION < sizeof(bt_node *)) {
     }
+  }
   return NULL;
 }
 
 /* TO-DO */
-static bt_node *get_next_open_node(binary_tree *const tree) {
+bt_node *get_next_open_node(binary_tree *const tree) {
   if (tree->num_open_nodes == 0) return NULL;
   if (tree->open_nodes)
     ;
@@ -280,8 +239,8 @@ static bt_node *get_next_open_node(binary_tree *const tree) {
  * are both `NULL`, this function will return a pointer to the `left` pointer.
  */
 bt_node **find_open_descendant(bt_node *const origin) {
-  bt_node **open_slot = node_search_left(origin, NULL);
-  if (open_slot == NULL) node_search_right(origin, NULL);
+  bt_node **open_slot = search_left_lineage(origin, NULL);
+  if (open_slot == NULL) search_right_lineage(origin, NULL);
   return open_slot;
 }
 
@@ -322,35 +281,11 @@ void force_make_node_child_of(bt_node *const src, bt_node *const dst) {
   dst->left = src;
 }
 
-/* NEEDS REDESIGN/REWRITE */
-void delete_node(bt_node *target) {
-  /*
-   * If the node to be deleted is part of a tree or lineage, then it will have a
-   * parent. In this case, we can just set the parent's pointer to the target
-   * node to NULL, thereby flagging it as open.
-   */
-  bt_node *parent = target->parent;
-  if (parent != NULL) {
-    if (parent->left == target)
-      parent->left = NULL;
-    else
-      parent->right = NULL;
-    return;
-  }
-  /* If the node has no parent, assume it is a freestanding node with no
-   * children. */
-  free(target);
-}
-
 int main(void) {
-  const int data[] = {1, 2, 3};
+  const size_t data[] = {1, 2, 3, 4, 5};
   binary_tree *a = new_binary_tree(data, sizeof(data) / sizeof(*data));
-  printf("%d", *(int*)a->root->value);
-  printf("%d", *(int*)a->root->left->value);
-  printf("%d", *(int *)a->root->right->value);
-  exit(0);
   printf("%zu\n", a->allocation);
-  a = resize_tree_s(a, a->allocation -36);
+  a = resize_tree_s(a, a->allocation - 36 * 4);
   printf("%zu\n", a->allocation);
   return 0;
 }
