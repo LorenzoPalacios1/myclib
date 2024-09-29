@@ -43,6 +43,11 @@ typedef struct {
  *      4     9
  *     / \   / \
  *    3   0 1   0
+ * \return
+ * \note This function returns a `binary_tree` without any way of tracking
+ * unused memory accrued after removing/deleting nodes.
+ * See `init_open_nodes()` if you would like to implement a stack (`open_nodes`)
+ * that tracks unused memory.
  */
 binary_tree *_new_binary_tree(const void *data, size_t elem_size,
                               size_t length);

@@ -22,7 +22,6 @@ binary_tree *_new_binary_tree(const void *const data, const size_t elem_size,
   tree_obj->num_nodes = length;
   tree_obj->node_size = NODE_SIZE;
   tree_obj->used_allocation = tree_obj->allocation = REQUIRED_MEM;
-  init_open_nodes(tree_obj);
 
   for (size_t i = 0; i < length; i++) {
     bt_node *const cur_node = (void *)((char *)nodes_mem + i * NODE_SIZE);
@@ -56,7 +55,7 @@ void delete_binary_tree_s(binary_tree **const tree) {
   delete_binary_tree(tree);
 }
 
-/* MAY NEED REDESIGN/REWRITE */
+/* NEEDS REDESIGN/REWRITE */
 bt_node *remove_node_from_tree(binary_tree *const tree, bt_node *const target) {
   bt_node *const node_copy = malloc(tree->node_size);
   if (node_copy == NULL) return NULL;
@@ -124,12 +123,11 @@ size_t count_descendant_nodes(bt_node *const origin) {
       cur_node = cur_node->left;
   }
 
-  size_t right_branch_depth = 0;
   for (bt_node *cur_node = origin->right; cur_node != NULL; count++) {
-    if (cur_node->right == NULL)
-      cur_node = cur_node->left;
-    else
+    if (cur_node->left == NULL)
       cur_node = cur_node->right;
+    else
+      cur_node = cur_node->left;
   }
   return count;
 }
@@ -167,12 +165,18 @@ bt_node **search_right_lineage(bt_node *origin, bt_node *const target) {
 }
 
 void delete_node_from_tree(binary_tree *const tree, bt_node *const target) {
-  bt_node *const parent = target->parent;
-  if (parent != NULL) {
-    if (parent->left == target)
-      parent->left = NULL;
-    else
-      parent->right = NULL;
+  if (target != NULL) {
+    
+    bt_node *const parent = target->parent;
+    if (parent != NULL) {
+      if (parent->left == target)
+        parent->left = NULL;
+      else
+        parent->right = NULL;
+    } else {
+      tree->root = NULL;
+    }
+    tree->used_allocation -= tree->node_size;
   }
 }
 
@@ -197,10 +201,8 @@ binary_tree *resize_tree_s(binary_tree *tree, const size_t new_size) {
     for (size_t i = 0; i < NODES_AFFECTED; i++) {
       bt_node *cur_node =
           (void *)((char *)tree->root + (NUM_NODES - i - 1) * NODE_SIZE);
-      if (tree->open_nodes != NULL) {
-        tree = add_open_node(tree, cur_node);
-        if (tree == NULL) return NULL;
-      }
+      tree = add_open_node(tree, cur_node);
+      if (tree == NULL) return NULL;
       delete_node_from_tree(tree, cur_node);
     }
   }
@@ -235,6 +237,7 @@ binary_tree *add_open_node(binary_tree *tree, bt_node *const open_node) {
   *stack_terminator = open_node;
   *(stack_terminator + 1) = NULL;
   tree->used_allocation += sizeof(tree->open_nodes);
+  return tree;
 }
 
 binary_tree *init_open_nodes(binary_tree *tree) {
