@@ -22,6 +22,7 @@ binary_tree *_new_binary_tree(const void *const data, const size_t elem_size,
   tree_obj->num_nodes = length;
   tree_obj->node_size = NODE_SIZE;
   tree_obj->used_allocation = tree_obj->allocation = REQUIRED_MEM;
+  tree_obj->open_nodes = NULL;
 
   for (size_t i = 0; i < length; i++) {
     bt_node *const cur_node = (void *)((char *)nodes_mem + i * NODE_SIZE);
@@ -55,19 +56,12 @@ void delete_binary_tree_s(binary_tree **const tree) {
   delete_binary_tree(tree);
 }
 
-/* NEEDS REDESIGN/REWRITE */
 bt_node *remove_node_from_tree(binary_tree *const tree, bt_node *const target) {
   bt_node *const node_copy = malloc(tree->node_size);
   if (node_copy == NULL) return NULL;
-  bt_node *parent = target->parent;
-  bt_node *original_node_pos;
-  if (parent->left == target) {
-    parent->left = NULL;
-  } else if (target->parent->right == target) {
-    parent->right = NULL;
-  }
-  tree->used_allocation -= tree->node_size;
   memcpy(node_copy, target, tree->node_size);
+  delete_node_from_tree(tree, target);
+  node_copy->parent = NULL;
   return node_copy;
 }
 
@@ -166,13 +160,14 @@ bt_node **search_right_lineage(bt_node *origin, bt_node *const target) {
 
 void delete_node_from_tree(binary_tree *const tree, bt_node *const target) {
   if (target != NULL) {
-    
     bt_node *const parent = target->parent;
     if (parent != NULL) {
       if (parent->left == target)
         parent->left = NULL;
       else
         parent->right = NULL;
+      if (tree->open_nodes != NULL)
+        add_open_node(tree, target);
     } else {
       tree->root = NULL;
     }
@@ -218,16 +213,16 @@ binary_tree *expand_tree(binary_tree *const tree) {
 }
 
 binary_tree *add_open_node(binary_tree *tree, bt_node *const open_node) {
+  if (tree->open_nodes == NULL) return NULL;
   const size_t ALLOCATION = tree->allocation;
   const size_t USED_ALLOCATION = tree->used_allocation;
   if (ALLOCATION - USED_ALLOCATION < sizeof(bt_node *)) {
-    binary_tree *resized_tree = expand_tree(tree);
-    if (resized_tree == NULL) return NULL;
-    tree = resized_tree;
+    tree = expand_tree(tree);
+    if (tree == NULL) return NULL;
   }
   /*
-   * This direct access of tree->open_nodes exists for two reasons:
-   * 1. This gives the address of the `NULL` terminating pointer in
+   * This direct access of `tree->open_nodes` exists for two reasons:
+   * 1. This gives the address of the terminating `NULL` pointer in
    * `tree->open_node`.
    * 2. This will not modify `tree->open_nodes` and will therefore not interfere
    * with any code reliant upon `tree->open_nodes`, such as `get_open_node`.
@@ -236,7 +231,7 @@ binary_tree *add_open_node(binary_tree *tree, bt_node *const open_node) {
       (void *)((char *)tree + tree->used_allocation - sizeof(tree->open_nodes));
   *stack_terminator = open_node;
   *(stack_terminator + 1) = NULL;
-  tree->used_allocation += sizeof(tree->open_nodes);
+  tree->used_allocation += sizeof(bt_node *);
   return tree;
 }
 
@@ -289,9 +284,9 @@ void force_make_node_child_of(bt_node *const src, bt_node *const dst) {
 int main(void) {
   const size_t data[] = {1, 2, 3, 4, 5};
   binary_tree *a = new_binary_tree(data, sizeof(data) / sizeof(*data));
-  printf("%td\n", (ptrdiff_t)a->root->left);
-  a = resize_tree_s(a, a->allocation - 36 * 4);
-  printf("%td\n", (ptrdiff_t)a->root->left);
+  printf("%td\n", (ptrdiff_t)a->open_nodes);
+  a = init_open_nodes(a);
+  printf("%td\n", (ptrdiff_t)*a->open_nodes);
 
   return 0;
 }

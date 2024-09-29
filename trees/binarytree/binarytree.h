@@ -46,8 +46,8 @@ typedef struct {
  * \return
  * \note This function returns a `binary_tree` without any way of tracking
  * unused memory accrued after removing/deleting nodes.
- * See `init_open_nodes()` if you would like to implement a stack (`open_nodes`)
- * that tracks unused memory.
+ * See `init_open_nodes()` if you would like to enable a stack (`open_nodes`)
+ * to track unused memory.
  */
 binary_tree *_new_binary_tree(const void *data, size_t elem_size,
                               size_t length);
@@ -64,6 +64,9 @@ bt_node *add_binary_node(binary_tree *tree, const void *elem);
  *
  * \return A (potentially new) pointer associated with the contents of `tree`
  * or `NULL` upon failure.
+ * \note If `init_open_nodes()` was not called prior to this function or
+ * `tree->open_nodes` is `NULL`, this function will fail and return `NULL`.
+ * If this occurs, `tree` and `open_node` will be unchanged.
  */
 binary_tree *add_open_node(binary_tree *tree, bt_node *open_node);
 
@@ -75,8 +78,8 @@ binary_tree *add_open_node(binary_tree *tree, bt_node *open_node);
 size_t count_descendant_nodes(bt_node *origin);
 
 /*
- * Frees the passed binary tree's consumed memory and reassigns its pointer
- * to `NULL`.
+ * Same as `delete_binary_tree()`, except this function will write `0` across
+ * the allocated memory of `tree`.
  */
 void delete_binary_tree(binary_tree **tree);
 
