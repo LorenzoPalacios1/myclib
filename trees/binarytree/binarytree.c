@@ -6,7 +6,7 @@
 #include <vadefs.h>
 
 #include "../trees.h"
-
+#include <stdio.h>
 binary_tree *_new_binary_tree(const void *const data, const size_t elem_size,
                               const size_t length) {
   const size_t NODE_SIZE = sizeof(bt_node) + elem_size;
@@ -60,10 +60,8 @@ bt_node *remove_node_from_tree(binary_tree *const tree, bt_node *const target) {
   bt_node *parent = target->parent;
   bt_node *original_node_pos;
   if (parent->left == target) {
-    original_node_pos = parent->left;
     parent->left = NULL;
   } else if (target->parent->right == target) {
-    original_node_pos = parent->right;
     parent->right = NULL;
   }
   tree->used_allocation -= tree->node_size;
@@ -166,9 +164,6 @@ void delete_node_and_lineage_s(binary_tree *const tree, bt_node *target) {
     else if (parent->right == target)
       parent->right = NULL;
   }
-
-  bt_node *left_node = target->left;
-  bt_node *right_node = target->right;
 }
 
 /*
@@ -204,9 +199,17 @@ bt_node **node_search_right(bt_node *origin, bt_node *const target) {
 binary_tree *resize_tree(binary_tree *const tree, const size_t new_size) {
   binary_tree *const new_tree = realloc(tree, new_size);
   if (new_tree == NULL) return NULL;
-  
+  new_tree->allocation = new_size;
+
+  if (new_size < new_tree->used_allocation) {
+    new_tree->used_allocation = new_size;
+    new_tree->num_nodes = (new_size - sizeof(*tree)) / new_tree->node_size;
+  }
+
+  return new_tree;
 }
 
+/* TO-DO */
 static bt_node *add_open_node(binary_tree *const tree) {
   const size_t ALLOCATION = tree->allocation;
   const size_t USED_ALLOCATION = tree->used_allocation;
@@ -214,16 +217,17 @@ static bt_node *add_open_node(binary_tree *const tree) {
   const bt_node *open_nodes = tree->open_nodes;
   if (open_nodes == NULL)
     if (ALLOCATION - USED_ALLOCATION < NODE_SIZE) {
-
     }
+  return NULL;
 }
 
+/* TO-DO */
 static bt_node *get_next_open_node(binary_tree *const tree) {
-  if (tree->num_open_nodes == 0)
-    return NULL;
+  if (tree->num_open_nodes == 0) return NULL;
   if (tree->open_nodes)
+    ;
+  return NULL; 
 }
-
 /*
  * Finds the first open slot (that is, a `left` or `right` pointer whose value
  * is `NULL`) in a branch of nodes.
@@ -293,4 +297,13 @@ void delete_node(bt_node *target) {
   /* If the node has no parent, assume it is a freestanding node with no
    * children. */
   free(target);
+}
+
+int main(void) {
+  const int data[] = {1, 2, 3, 4, 5};
+  binary_tree *a = new_binary_tree(data, sizeof(data) / sizeof(*data));
+  printf("%zu\n", a->used_allocation);
+  a = resize_tree(a, a->allocation * 10);
+  printf("%zu\n", a->used_allocation);
+  return 0;
 }
