@@ -91,7 +91,7 @@ void delete_binary_tree_s(binary_tree **tree);
 
 void delete_node_and_lineage(binary_tree *tree, bt_node *target);
 
-void delete_node_from_tree(binary_tree *tree, bt_node *target);
+binary_tree *delete_node_from_tree(binary_tree *tree, bt_node *target);
 
 binary_tree *expand_tree(binary_tree *tree);
 

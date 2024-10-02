@@ -158,21 +158,32 @@ bt_node **search_right_lineage(bt_node *origin, bt_node *const target) {
   return &target->right;
 }
 
-void delete_node_from_tree(binary_tree *const tree, bt_node *const target) {
+binary_tree *delete_node_from_tree(binary_tree *tree, bt_node *const target) {
   if (target != NULL) {
     bt_node *const parent = target->parent;
+    /*
+     * If the tree implements tracking of open blocks of memory, add the node
+     * as an open block.
+     */
+    if (tree->open_nodes != NULL) {
+      tree = add_open_node(tree, target);
+      if (tree == NULL) return NULL;
+    }
+    /*
+     * The `NULL` check prevents the deletion of freestanding nodes. Eventually,
+     * freestanding nodes will gain their own deletion function.
+     */
     if (parent != NULL) {
       if (parent->left == target)
         parent->left = NULL;
       else
         parent->right = NULL;
-      if (tree->open_nodes != NULL)
-        add_open_node(tree, target);
     } else {
       tree->root = NULL;
     }
     tree->used_allocation -= tree->node_size;
   }
+  return tree;
 }
 
 binary_tree *resize_tree(binary_tree *const tree, const size_t new_size) {
@@ -196,9 +207,8 @@ binary_tree *resize_tree_s(binary_tree *tree, const size_t new_size) {
     for (size_t i = 0; i < NODES_AFFECTED; i++) {
       bt_node *cur_node =
           (void *)((char *)tree->root + (NUM_NODES - i - 1) * NODE_SIZE);
-      tree = add_open_node(tree, cur_node);
+      tree = delete_node_from_tree(tree, cur_node);
       if (tree == NULL) return NULL;
-      delete_node_from_tree(tree, cur_node);
     }
   }
 
@@ -284,8 +294,10 @@ void force_make_node_child_of(bt_node *const src, bt_node *const dst) {
 int main(void) {
   const size_t data[] = {1, 2, 3, 4, 5};
   binary_tree *a = new_binary_tree(data, sizeof(data) / sizeof(*data));
-  printf("%td\n", (ptrdiff_t)a->open_nodes);
   a = init_open_nodes(a);
+  printf("%td\n", (ptrdiff_t)*a->open_nodes);
+  a = delete_node_from_tree(a, a->root->right);
+  a = delete_node_from_tree(a, a->root->left);
   printf("%td\n", (ptrdiff_t)*a->open_nodes);
 
   return 0;
