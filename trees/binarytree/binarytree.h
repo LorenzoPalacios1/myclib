@@ -91,7 +91,16 @@ void delete_binary_tree_s(binary_tree **tree);
 
 void delete_node_and_lineage(binary_tree *tree, bt_node *target);
 
-binary_tree *delete_node_from_tree(binary_tree *tree, bt_node *target);
+/*
+ * Removes `target` from the hierarchy of `tree`, adding it to
+ * `tree->open_nodes` if `tree` accepts tracking of open blocks of memory.
+ *
+ * \return A (potentially new) pointer associated with the contents of `tree`
+ * or `NULL` upon failure.
+ * \note Any child nodes of `target` will not be deleted. Instead, their new
+ * parent will be somewhere in the lineage of `tree->parent`.
+ */
+binary_tree *delete_node_from_tree_s(binary_tree *tree, bt_node *target);
 
 binary_tree *expand_tree(binary_tree *tree);
 
@@ -103,7 +112,7 @@ binary_tree *expand_tree(binary_tree *tree);
  * \note If this function encounters a node whose `left` and `right` pointers
  * are both `NULL`, this function will return a pointer to the `left` pointer.
  */
-bt_node **find_open_descendant(bt_node *origin);
+bt_node **find_open_descendant(const bt_node *origin);
 
 /*
  * Finds the first open `left` or `right` pointer in `dst` and places `src`
@@ -128,7 +137,7 @@ size_t get_depth(bt_node *origin);
 
 bt_node *get_open_node(binary_tree *tree);
 
-void iterate_over_lineage(bt_node *origin,
+void operate_over_lineage(bt_node *origin,
                           void (*op)(bt_node *node, va_list *args),
                           va_list *args);
 
@@ -189,7 +198,7 @@ binary_tree *resize_tree_s(binary_tree *tree, size_t new_size);
  *
  * \return A pointer to `target` or `NULL` if `target` was not found.
  */
-bt_node **search_left_lineage(bt_node *origin, bt_node *target);
+bt_node **search_left_branch(bt_node *origin, const bt_node *target);
 
 /*
  * Searches along the `right` ancestors of `origin` until `target` pointer is
@@ -197,5 +206,5 @@ bt_node **search_left_lineage(bt_node *origin, bt_node *target);
  *
  * \return A pointer to `target` or `NULL` if `target` was not found.
  */
-bt_node **search_right_lineage(bt_node *origin, bt_node *target);
+bt_node **search_right_branch(bt_node *origin, const bt_node *target);
 #endif

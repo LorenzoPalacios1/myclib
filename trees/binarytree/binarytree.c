@@ -60,12 +60,12 @@ bt_node *remove_node_from_tree(binary_tree *const tree, bt_node *const target) {
   bt_node *const node_copy = malloc(tree->node_size);
   if (node_copy == NULL) return NULL;
   memcpy(node_copy, target, tree->node_size);
-  delete_node_from_tree(tree, target);
+  delete_node_from_tree_s(tree, target);
   node_copy->parent = NULL;
   return node_copy;
 }
 
-void iterate_over_lineage(bt_node *const origin,
+void operate_over_lineage(bt_node *const origin,
                           void (*const op)(bt_node *node, va_list *args),
                           va_list *const args) {
   bt_node *cur_node = origin->left;
@@ -76,6 +76,7 @@ void iterate_over_lineage(bt_node *const origin,
     else
       cur_node = cur_node->left;
   }
+
   cur_node = origin->right;
   while (cur_node != NULL) {
     op(cur_node, args);
@@ -140,16 +141,52 @@ void delete_node_and_lineage(binary_tree *const tree, bt_node *target) {
   tree->used_allocation -= REMOVED_NODES * tree->node_size;
 }
 
-bt_node **search_left_lineage(bt_node *origin, bt_node *const target) {
+/*
+ * Searches upwards along the ancestry of `origin` until finding a node whose
+ * `left` and `right` pointers are not `NULL`. Such a node is considered
+ * divergent since, during tree traversal, a search algorithm must choose
+ * either the `left` or `right` branch of that node.
+ *
+ * \return A pointer to the first ancestral node of `origin` containing a branch
+ * divergence or `NULL` if no suitable node is found.
+ */
+bt_node *next_ancestral_divergence(const bt_node *origin) {
+  while (origin->parent != NULL) {
+    if (origin->parent->left != NULL && origin->parent->right != NULL)
+      return origin->parent;
+    origin = origin->parent;
+  }
+  return NULL;
+}
+
+bt_node **search_left_branch(bt_node *origin, const bt_node *const target) {
+  /*
+   * The function will search along the left branch of a tree, deviating to the
+   * right if and only if the `left` pointer of a touched node is `NULL`. If
+   * both `left` and `right` are `NULL`, then we backtrack to this node which
+   * will have a right branch to be traversed.
+   *
+   * Note that this node will have already been traversed prior to backtracking,
+   * hence why we can always select the right branch of this node.
+   */
+  bt_node *last_divergence = origin;
   while (origin != NULL) {
     if (origin->left == target) return &origin->left;
     if (origin->right == target) return &origin->right;
+    if (origin->left == NULL) {
+      if (origin->right == NULL) {
+        origin = last_divergence;
+        /* Find the next divergence in case future backtracking is required. */
+        last_divergence = next_ancestral_divergence(origin);
+      }
+      origin = origin->right;
+    }
     origin = origin->left;
   }
   return NULL;
 }
 
-bt_node **search_right_lineage(bt_node *origin, bt_node *const target) {
+bt_node **search_right_branch(bt_node *origin, bt_node *const target) {
   while (origin != NULL) {
     if (origin->left == target) return &origin->left;
     if (origin->right == target) return &origin->right;
@@ -158,9 +195,28 @@ bt_node **search_right_lineage(bt_node *origin, bt_node *const target) {
   return &target->right;
 }
 
-binary_tree *delete_node_from_tree(binary_tree *tree, bt_node *const target) {
+binary_tree *delete_node_from_tree_s(binary_tree *tree, bt_node *const target) {
   if (target != NULL) {
     bt_node *const parent = target->parent;
+    if (parent != NULL) {
+      /*
+       * Overwrite the parent's pointer to `target` with the child nodes of
+       * `target` to ensure the lineage of `target` is not lost.
+       */
+      if (parent->left == target) {
+        parent->left = target->left;
+        if (target->right != NULL)
+          *find_open_descendant(parent->right) = target->right;
+      } else {
+        parent->right = target->right;
+        if (target->left != NULL)
+          *find_open_descendant(parent->left) = target->left;
+      }
+    } else {
+      /* If the node has no parent, assume it is the root node. */
+      tree->root = target->left == NULL ? target->right : target->left;
+    }
+    tree->used_allocation -= tree->node_size;
     /*
      * If the tree implements tracking of open blocks of memory, add the node
      * as an open block.
@@ -169,19 +225,6 @@ binary_tree *delete_node_from_tree(binary_tree *tree, bt_node *const target) {
       tree = add_open_node(tree, target);
       if (tree == NULL) return NULL;
     }
-    /*
-     * The `NULL` check prevents the deletion of freestanding nodes. Eventually,
-     * freestanding nodes will gain their own deletion function.
-     */
-    if (parent != NULL) {
-      if (parent->left == target)
-        parent->left = NULL;
-      else
-        parent->right = NULL;
-    } else {
-      tree->root = NULL;
-    }
-    tree->used_allocation -= tree->node_size;
   }
   return tree;
 }
@@ -207,7 +250,7 @@ binary_tree *resize_tree_s(binary_tree *tree, const size_t new_size) {
     for (size_t i = 0; i < NODES_AFFECTED; i++) {
       bt_node *cur_node =
           (void *)((char *)tree->root + (NUM_NODES - i - 1) * NODE_SIZE);
-      tree = delete_node_from_tree(tree, cur_node);
+      tree = delete_node_from_tree_s(tree, cur_node);
       if (tree == NULL) return NULL;
     }
   }
@@ -264,10 +307,8 @@ bt_node *get_open_node(binary_tree *const tree) {
   return *(tree->open_nodes++);
 }
 
-bt_node **find_open_descendant(bt_node *const origin) {
-  bt_node **open_slot = search_left_lineage(origin, NULL);
-  if (open_slot == NULL) search_right_lineage(origin, NULL);
-  return open_slot;
+bt_node **find_open_descendant(const bt_node *const origin) {
+  return search_left_branch(origin, NULL);
 }
 
 /* NEEDS REDESIGN/REWRITE */
@@ -296,8 +337,8 @@ int main(void) {
   binary_tree *a = new_binary_tree(data, sizeof(data) / sizeof(*data));
   a = init_open_nodes(a);
   printf("%td\n", (ptrdiff_t)*a->open_nodes);
-  a = delete_node_from_tree(a, a->root->right);
-  a = delete_node_from_tree(a, a->root->left);
+  a = delete_node_from_tree_s(a, a->root->right);
+  a = delete_node_from_tree_s(a, a->root->left);
   printf("%td\n", (ptrdiff_t)*a->open_nodes);
 
   return 0;
