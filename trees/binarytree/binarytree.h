@@ -193,18 +193,7 @@ binary_tree *resize_tree(binary_tree *tree, size_t new_size);
 binary_tree *resize_tree_s(binary_tree *tree, size_t new_size);
 
 /*
- * Searches along the `left` lineage of `origin` until `target` pointer is
- * found.
- *
- * \return A pointer to `target` or `NULL` if `target` was not found.
+ * DOC NEEDED
  */
-bt_node **search_left_branch(bt_node *origin, const bt_node *target);
-
-/*
- * Searches along the `right` ancestors of `origin` until `target` pointer is
- * found.
- *
- * \return A pointer to `target` or `NULL` if `target` was not found.
- */
-bt_node **search_right_branch(bt_node *origin, const bt_node *target);
+bt_node **search_for_node(bt_node *origin, const bt_node *target);
 #endif

@@ -142,7 +142,7 @@ void delete_node_and_lineage(binary_tree *const tree, bt_node *target) {
 }
 
 /*
- * Searches upwards along the ancestry of `origin` until finding a node whose
+ * Searches upwards along the ancestry of `origin` until a node is found whose
  * `left` and `right` pointers are not `NULL`. Such a node is considered
  * divergent since, during tree traversal, a search algorithm must choose
  * either the `left` or `right` branch of that node.
@@ -152,14 +152,14 @@ void delete_node_and_lineage(binary_tree *const tree, bt_node *target) {
  */
 bt_node *next_ancestral_divergence(const bt_node *origin) {
   while (origin->parent != NULL) {
-    if (origin->parent->left != NULL && origin->parent->right != NULL)
-      return origin->parent;
-    origin = origin->parent;
+    bt_node *const parent = origin->parent;
+    if (parent->left != NULL && parent->right != NULL) return parent;
+    origin = parent;
   }
   return NULL;
 }
 
-bt_node **search_left_branch(bt_node *origin, const bt_node *const target) {
+bt_node **search_for_node(bt_node *origin, const bt_node *const target) {
   /*
    * The function will search along the left branch of a tree, deviating to the
    * right if and only if the `left` pointer of a touched node is `NULL`. If
@@ -173,26 +173,25 @@ bt_node **search_left_branch(bt_node *origin, const bt_node *const target) {
   while (origin != NULL) {
     if (origin->left == target) return &origin->left;
     if (origin->right == target) return &origin->right;
+
+    if (origin->left != NULL && origin->right != NULL) last_divergence = origin;
+
     if (origin->left == NULL) {
       if (origin->right == NULL) {
+        /* 
+         * Since we have already searched the divergent node's left path, we can
+         * let this control path continue onto `origin = origin->right`.
+         */
         origin = last_divergence;
         /* Find the next divergence in case future backtracking is required. */
-        last_divergence = next_ancestral_divergence(origin);
+        last_divergence = next_ancestral_divergence(last_divergence);
       }
       origin = origin->right;
+      continue;
     }
     origin = origin->left;
   }
   return NULL;
-}
-
-bt_node **search_right_branch(bt_node *origin, bt_node *const target) {
-  while (origin != NULL) {
-    if (origin->left == target) return &origin->left;
-    if (origin->right == target) return &origin->right;
-    origin = origin->right;
-  }
-  return &target->right;
 }
 
 binary_tree *delete_node_from_tree_s(binary_tree *tree, bt_node *const target) {
@@ -335,11 +334,6 @@ void force_make_node_child_of(bt_node *const src, bt_node *const dst) {
 int main(void) {
   const size_t data[] = {1, 2, 3, 4, 5};
   binary_tree *a = new_binary_tree(data, sizeof(data) / sizeof(*data));
-  a = init_open_nodes(a);
-  printf("%td\n", (ptrdiff_t)*a->open_nodes);
-  a = delete_node_from_tree_s(a, a->root->right);
-  a = delete_node_from_tree_s(a, a->root->left);
-  printf("%td\n", (ptrdiff_t)*a->open_nodes);
-
+  printf("%zu\n", *(size_t*)(*search_for_target_node(a->root, a->root->right))->value);
   return 0;
 }
