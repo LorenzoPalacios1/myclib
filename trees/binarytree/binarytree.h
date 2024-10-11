@@ -112,7 +112,7 @@ binary_tree *expand_tree(binary_tree *tree);
  * \note If this function encounters a node whose `left` and `right` pointers
  * are both `NULL`, this function will return a pointer to the `left` pointer.
  */
-bt_node **find_open_descendant(const bt_node *origin);
+bt_node **find_open_descendant(bt_node *origin);
 
 /*
  * Finds the first open `left` or `right` pointer in `dst` and places `src`
@@ -192,8 +192,5 @@ binary_tree *resize_tree(binary_tree *tree, size_t new_size);
  */
 binary_tree *resize_tree_s(binary_tree *tree, size_t new_size);
 
-/*
- * DOC NEEDED
- */
 bt_node **search_for_node(bt_node *origin, const bt_node *target);
 #endif

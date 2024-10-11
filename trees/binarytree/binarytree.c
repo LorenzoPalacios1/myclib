@@ -161,35 +161,42 @@ bt_node *next_ancestral_divergence(const bt_node *origin) {
 
 bt_node **search_for_node(bt_node *origin, const bt_node *const target) {
   /*
-   * The function will search along the left branch of a tree, deviating to the
-   * right if and only if the `left` pointer of a touched node is `NULL`. If
-   * both `left` and `right` are `NULL`, then we backtrack to this node which
-   * will have a right branch to be traversed.
+   * The function will search along the left branch of `origin` and will deviate
+   * to a right branch if and only if the `left` pointer of a traversed node is
+   * `NULL`. If both `left` and `right` are `NULL`, then we backtrack to this
+   * node which will have a right branch to be traversed.
    *
    * Note that this node will have already been traversed prior to backtracking,
    * hence why we can always select the right branch of this node.
    */
-  bt_node *last_divergence = origin;
-  while (origin != NULL) {
-    if (origin->left == target) return &origin->left;
-    if (origin->right == target) return &origin->right;
-
-    if (origin->left != NULL && origin->right != NULL) last_divergence = origin;
-
-    if (origin->left == NULL) {
-      if (origin->right == NULL) {
-        /* 
-         * Since we have already searched the divergent node's left path, we can
-         * let this control path continue onto `origin = origin->right`.
-         */
-        origin = last_divergence;
-        /* Find the next divergence in case future backtracking is required. */
-        last_divergence = next_ancestral_divergence(last_divergence);
-      }
-      origin = origin->right;
-      continue;
+  bt_node *last_divergence = NULL;
+  bt_node *prev_node = NULL;
+  bt_node *cur_node = origin;
+  bt_node *next_node = NULL;
+  while (cur_node != NULL) {
+    if (cur_node == prev_node) break;
+    if (cur_node->left == target) return &cur_node->left;
+    if (cur_node->right == target) return &cur_node->right;
+    printf("%zu\n", *(size_t *)cur_node->value);
+    if (cur_node->left != NULL) {
+      /*
+       * Since `cur_node` has two valid branches, `left` and `right`, we
+       * continue down the left branch and save `cur_node` as the last divergent
+       * node.
+       */
+      if (cur_node->right != NULL) last_divergence = cur_node;
+      next_node = cur_node->left;
+    } else {
+      next_node = cur_node->right;
     }
-    origin = origin->left;
+    if (next_node == NULL) {
+      /* If there is no divergence along the traversed path, we're done. */
+      if (last_divergence == NULL) break;
+      next_node = last_divergence->right;
+      last_divergence = next_ancestral_divergence(last_divergence);
+    }
+    prev_node = cur_node;
+    cur_node = next_node;
   }
   return NULL;
 }
@@ -306,8 +313,8 @@ bt_node *get_open_node(binary_tree *const tree) {
   return *(tree->open_nodes++);
 }
 
-bt_node **find_open_descendant(const bt_node *const origin) {
-  return search_left_branch(origin, NULL);
+bt_node **find_open_descendant(bt_node *const origin) {
+  return search_for_node(origin, NULL);
 }
 
 /* NEEDS REDESIGN/REWRITE */
@@ -332,8 +339,16 @@ void force_make_node_child_of(bt_node *const src, bt_node *const dst) {
 }
 
 int main(void) {
-  const size_t data[] = {1, 2, 3, 4, 5};
+  const size_t data[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
   binary_tree *a = new_binary_tree(data, sizeof(data) / sizeof(*data));
-  printf("%zu\n", *(size_t*)(*search_for_target_node(a->root, a->root->right))->value);
+  bt_node **found_node = search_for_node(a->root, a->root);
+  printf("addressof: %td\n", (ptrdiff_t)found_node);
+  if (found_node != NULL) {
+    printf("node pointer: %td\n", (ptrdiff_t)*found_node);
+    printf("pointer dist from root: %td\n",
+           (char *)*found_node - (char *)a->root);
+    if ((*found_node)->parent != NULL)
+      printf("node value: %zu\n", *(size_t *)(*found_node)->parent->value);
+  }
   return 0;
 }
