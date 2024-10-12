@@ -19,19 +19,19 @@ bwd_stack *create_bwd_stack(const size_t num_elems, const size_t elem_size) {
   return stk;
 }
 
-bwd_stack *_bwd_stack_from_arr(const void *const data, const size_t len,
+bwd_stack *_bwd_stack_from_arr(const void *const arr, const size_t len,
                                const size_t elem_size) {
   bwd_stack *const stk = create_bwd_stack(len, elem_size);
   if (stk == NULL) return NULL;
   stk->pos = len - 1;
   /*
-   * Since a backwards stack requires its constituent elements to be
+   * Since a backward stack requires its constituent elements to be
    * laid out in reverse order, we iterate from the last element of
-   * `data` to its first.
+   * `arr` to its first.
    */
-  for (size_t stk_i = 0, data_i = len - 1; stk_i < len; stk_i++, data_i--) {
+  for (size_t stk_i = 0, arr_i = len - 1; stk_i < len; stk_i++, arr_i--) {
     memcpy((char *)stk->data + stk_i * elem_size,
-           (char *)data + data_i * elem_size, elem_size);
+           (char *)arr + arr_i * elem_size, elem_size);
   }
   return stk;
 }
