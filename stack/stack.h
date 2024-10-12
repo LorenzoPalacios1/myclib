@@ -47,21 +47,46 @@ void *stack_peek(stack *stk);
  */
 void *stack_pop(stack *stk);
 
-/* 
- * Adds a new element to `stk`, expanding if necessary. 
+/*
+ * Adds a new element to `stk`, expanding if necessary.
  *
- * \return A pointer associated with the contents of `stk` or `NULL` upon failure.
+ * \return A pointer associated with the contents of `stk` or `NULL` upon
+ * failure.
  */
 stack *stack_push(stack *stk);
 
-void delete_stack(stack *stk);
+/*
+ * Frees the memory used by `stk` and invalidates the passed pointer associated
+ * with it.
+ */
+void delete_stack(stack **stk);
 
-void delete_stack_s(stack *stk);
+/*
+ * Same as `delete_stack()`, except this function will write zeros to the memory
+ * used by `stk` before freeing.
+ */
+void delete_stack_s(stack **stk);
 
+/*
+ * Expands the memory used by `stk->data`, thereby increasing its capacity.
+ *
+ * \return A pointer associated with the contents of `stk` or `NULL` upon
+ * failure.
+ */
 stack *expand_stack(stack *stk);
 
-stack *resize_stack(stack *stk);
+/*
+ * Resizes the memory used by `stk->data` to `new_size`.
+ *
+ * \return A pointer associated with the contents of `stk` or `NULL` upon
+ * failure.
+ * \note If `new_size` is not a multiple of `stk->elem_size`, the closest
+ * multiple to `elem_size` (rounded up) is used instead.
+ */
+stack *resize_stack(stack *stk, size_t new_size);
 
-stack *shrink_stack(stack *stk);
+stack *shrink_stack(stack *stk, size_t new_size);
+
+stack *shrink_stack_to_fit(stack *stk);
 
 #endif

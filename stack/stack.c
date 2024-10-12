@@ -1,16 +1,16 @@
-#include "bwdstack.h"
+#include "stack.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-static bwd_stack *alloc_bwd_stack(const size_t stack_capacity) {
-  return malloc(stack_capacity + sizeof(bwd_stack));
+static stack *alloc_stack(const size_t stack_capacity) {
+  return malloc(stack_capacity + sizeof(stack));
 }
 
-bwd_stack *create_bwd_stack(const size_t num_elems, const size_t elem_size) {
+stack *create_stack(const size_t num_elems, const size_t elem_size) {
   const size_t STACK_CAPACITY = num_elems * elem_size;
-  bwd_stack *const stk = alloc_bwd_stack(STACK_CAPACITY);
+  stack *const stk = alloc_stack(STACK_CAPACITY);
   if (stk == NULL) return NULL;
   stk->capacity = STACK_CAPACITY;
   stk->elem_size = elem_size;
@@ -19,9 +19,9 @@ bwd_stack *create_bwd_stack(const size_t num_elems, const size_t elem_size) {
   return stk;
 }
 
-bwd_stack *_bwd_stack_from_arr(const void *const arr, const size_t len,
+stack *_stack_from_arr(const void *const arr, const size_t len,
                                const size_t elem_size) {
-  bwd_stack *const stk = create_bwd_stack(len, elem_size);
+  stack *const stk = create_stack(len, elem_size);
   if (stk == NULL) return NULL;
   stk->pos = len - 1;
   /*
@@ -38,7 +38,7 @@ bwd_stack *_bwd_stack_from_arr(const void *const arr, const size_t len,
 
 int main(void) {
   const int data[] = {1, 2, 3, 4};
-  bwd_stack *a = bwd_stack_from_arr(data);
+  stack *a = stack_from_arr(data);
   printf("%zu %zu %zu ", a->capacity, a->elem_size, a->pos);
   printf("%d", ((int *)a->data)[a->pos]);
   return 0;
