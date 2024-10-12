@@ -1,5 +1,6 @@
 #include "bwdstack.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -19,7 +20,7 @@ bwd_stack *create_bwd_stack(const size_t num_elems, const size_t elem_size) {
 }
 
 bwd_stack *_bwd_stack_from_arr(const void *const data, const size_t len,
-                              const size_t elem_size) {
+                               const size_t elem_size) {
   bwd_stack *const stk = create_bwd_stack(len, elem_size);
   if (stk == NULL) return NULL;
   stk->pos = len - 1;
@@ -28,9 +29,9 @@ bwd_stack *_bwd_stack_from_arr(const void *const data, const size_t len,
    * laid out in reverse order, we iterate from the last element of
    * `data` to its first.
    */
-  for (size_t i = 0; i < len; i++) {
-    memcpy((char *)stk->data + i * elem_size,
-           (char *)data + (len - i * elem_size), elem_size);
+  for (size_t stk_i = 0, data_i = len - 1; stk_i < len; stk_i++, data_i--) {
+    memcpy((char *)stk->data + stk_i * elem_size,
+           (char *)data + data_i * elem_size, elem_size);
   }
   return stk;
 }
@@ -38,5 +39,7 @@ bwd_stack *_bwd_stack_from_arr(const void *const data, const size_t len,
 int main(void) {
   const int data[] = {1, 2, 3, 4};
   bwd_stack *a = bwd_stack_from_arr(data);
+  printf("%zu %zu %zu ", a->capacity, a->elem_size, a->pos);
+  printf("%d", ((int *)a->data)[a->pos]);
   return 0;
 }

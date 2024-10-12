@@ -5,7 +5,7 @@
 
 #include "../stack.h"
 
-/* 
+/*
  * This is a convenience macro for `_bwd_stack_from_arr()`.
  * Use with caution if `arr` has side effects.
  */
@@ -23,12 +23,18 @@
  *
  * `{1, 2, 3, NULL}`
  *
- * where '1` denotes the start of the stack and `NULL` denotes the end of the
+ * where `1` denotes the start of the stack and `NULL` denotes the end of the
  * stack.
  */
 typedef stack bwd_stack;
 
-bwd_stack *create_bwd_stack(size_t elems, size_t elem_size);
+/*
+ * Creates a new `bwd_stack` with enough capacity for `num_elems` elements of
+ * size `elem_size`. The stack will be empty.
+ *
+ * \return A pointer to an empty `bwd_stack`
+ */
+bwd_stack *create_bwd_stack(size_t num_elems, size_t elem_size);
 
 /*
  * Returns the top element of `stk` without removal.
