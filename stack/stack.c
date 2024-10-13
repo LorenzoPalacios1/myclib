@@ -4,6 +4,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* The factor by which to scale a stack's capacity by when expanding. */
+#define STACK_EXPANSION_FACTOR (2)
+
 typedef unsigned char byte_t;
 
 static stack *alloc_stack(const size_t stack_capacity) {
@@ -77,6 +80,21 @@ void delete_stack(stack **const stk) {
 void delete_stack_s(stack **stk) {
   memset(*stk, 0, (*stk)->capacity);
   delete_stack(stk);
+}
+
+stack *expand_stack(stack *stk) {
+  return resize_stack(stk, STACK_EXPANSION_FACTOR * stk->capacity);
+}
+
+stack *resize_stack(stack *stk, size_t new_size) {
+  {
+    const size_t ADDITIONAL_BYTES = new_size % stk->elem_size;
+    if (ADDITIONAL_BYTES != 0) new_size += ADDITIONAL_BYTES;
+  }
+  stk = realloc(stk, new_size);
+  if (stk == NULL) return NULL;
+  stk->capacity = new_size;
+  return stk;
 }
 
 int main(void) {

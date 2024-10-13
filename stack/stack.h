@@ -33,30 +33,6 @@ stack *_stack_from_arr(const void *arr, size_t len, size_t elem_size);
 stack *create_stack(size_t num_elems, size_t elem_size);
 
 /*
- * Returns the top element of `stk` without removing it.
- *
- * \return A pointer to the top element in `stk` or `NULL` if the end of the
- * stack was reached.
- */
-void *stack_peek(stack *stk);
-
-/*
- * Returns and removes the top element from `stk`.
- *
- * \return A pointer to the top element in `stk` or `NULL` if the end of the
- * stack was reached.
- */
-void *stack_pop(stack *stk);
-
-/*
- * Adds a new element to `stk`, expanding if necessary.
- *
- * \return A pointer associated with the contents of `stk` or `NULL` upon
- * failure.
- */
-stack *stack_push(stack *stk, const void *const elem);
-
-/*
  * Frees the memory used by `stk` and invalidates the passed pointer
  * associated with it.
  */
@@ -86,8 +62,30 @@ stack *expand_stack(stack *stk);
  */
 stack *resize_stack(stack *stk, size_t new_size);
 
-stack *shrink_stack(stack *stk, size_t new_size);
-
 stack *shrink_stack_to_fit(stack *stk);
+
+/*
+ * Returns the top element of `stk` without removing it.
+ *
+ * \return A pointer to the top element in `stk` or `NULL` if the end of the
+ * stack was reached.
+ */
+void *stack_peek(stack *stk);
+
+/*
+ * Returns and removes the top element from `stk`.
+ *
+ * \return A pointer to the top element in `stk` or `NULL` if the end of the
+ * stack was reached.
+ */
+void *stack_pop(stack *stk);
+
+/*
+ * Adds a new element to `stk`, expanding if necessary.
+ *
+ * \return A pointer associated with the contents of `stk` or `NULL` upon
+ * failure.
+ */
+stack *stack_push(stack *stk, const void *const elem);
 
 #endif
