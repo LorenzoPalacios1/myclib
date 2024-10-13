@@ -34,41 +34,12 @@ stack *_stack_from_arr(const void *const arr, const size_t len,
   /*
    * Since a backward stack requires its constituent elements to be
    * laid out in reverse order, we iterate from the last element of
-   * `arr` to its first.
+   * `arr` to the first.
    */
   for (size_t stk_i = 0, arr_i = len - 1; stk_i < len; stk_i++, arr_i--) {
     memcpy((byte_t *)stk->data + stk_i * elem_size,
            (byte_t *)arr + arr_i * elem_size, elem_size);
   }
-  return stk;
-}
-
-void *stack_peek(stack *const stk) {
-  if (stk->length == 0) return NULL;
-  /*
-   * Subtracting by one since `length` is equivalent to the number of elements
-   * within `stk` and we need a length of zero to denote an empty stack.
-   */
-  return (byte_t *)stk->data + (stk->length - 1) * stk->elem_size;
-}
-
-void *stack_pop(stack *const stk) {
-  if (stk->length == 0) return NULL;
-  void *val = stack_peek(stk);
-  stk->length--;
-  return val;
-}
-
-stack *stack_push(stack *stk, const void *const elem) {
-  if (stk->used_capacity + stk->elem_size >= stk->capacity) {
-    stk = expand_stack(stk);
-    if (stk == NULL) return NULL;
-  }
-  const size_t LENGTH = stk->length;
-  const size_t ELEM_SIZE = stk->elem_size;
-  memcpy((byte_t *)stk->data + LENGTH * ELEM_SIZE, elem, ELEM_SIZE);
-  stk->length++;
-  stk->used_capacity += stk->elem_size;
   return stk;
 }
 
@@ -91,20 +62,49 @@ stack *resize_stack(stack *stk, size_t new_size) {
     const size_t ADDITIONAL_BYTES = new_size % stk->elem_size;
     if (ADDITIONAL_BYTES != 0) new_size += ADDITIONAL_BYTES;
   }
-  stk = realloc(stk, new_size);
+  stk = realloc(stk, new_size + sizeof(stack));
   if (stk == NULL) return NULL;
   stk->capacity = new_size;
   return stk;
 }
 
+void *stack_peek(stack *const stk) {
+  if (stk->length == 0) return NULL;
+  /*
+   * Subtracting by one since `stk->length` is equivalent to the number of
+   * elements within `stk`.
+   */
+  return (byte_t *)stk->data + (stk->length - 1) * stk->elem_size;
+}
+
+void *stack_pop(stack *const stk) {
+  if (stk->length == 0) return NULL;
+  void *val = stack_peek(stk);
+  stk->length--;
+  return val;
+}
+
+stack *stack_push(stack *stk, const void *const elem) {
+  if (stk->used_capacity + stk->elem_size > stk->capacity) {
+    printf("original: %p\n", (void *)stk);
+    stk = expand_stack(stk);
+    printf("after: %p\n", (void *)stk);
+    if (stk == NULL) return NULL;
+  }
+  const size_t LENGTH = stk->length;
+  const size_t ELEM_SIZE = stk->elem_size;
+  memcpy((byte_t *)stk->data + LENGTH * ELEM_SIZE, elem, ELEM_SIZE);
+  stk->length++;
+  stk->used_capacity += stk->elem_size;
+  return stk;
+}
+
 int main(void) {
-  const size_t data[] = {1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
-                         15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
-                         29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40};
-  stack *a = stack_from_arr(data);
-  const size_t num = 3;
-  a = stack_push(a, &num);
+  stack *a = create_stack(12, sizeof(size_t));
   const size_t *val;
-  while ((val = stack_pop(a))) printf("%zu\n", *val);
+  for (size_t i = 0; (a = stack_push(a, &i)) && (val = stack_peek(a)); i++)
+    printf("%zu | len: %zu | used: %zu | free: %zu\n", *val, a->length,
+           a->used_capacity, a->capacity - a->used_capacity);
+  delete_stack(&a);
   return 0;
 }
