@@ -20,10 +20,10 @@ stack *create_stack(const size_t num_elems, const size_t elem_size) {
 }
 
 stack *_stack_from_arr(const void *const arr, const size_t len,
-                               const size_t elem_size) {
+                       const size_t elem_size) {
   stack *const stk = create_stack(len, elem_size);
   if (stk == NULL) return NULL;
-  stk->pos = len - 1;
+  stk->pos = len;
   /*
    * Since a backward stack requires its constituent elements to be
    * laid out in reverse order, we iterate from the last element of
@@ -36,10 +36,29 @@ stack *_stack_from_arr(const void *const arr, const size_t len,
   return stk;
 }
 
+void *stack_peek(stack *const stk) {
+  if (stk->pos == 0) return NULL;
+  /*
+   * Subtracting by one since `pos` is equivalent to the current stack length
+   * and because we use zero to denote an empty stack.
+   */
+  return (char *)stk->data + (stk->pos - 1) * stk->elem_size;
+}
+
+void *stack_pop(stack *const stk) {
+  if (stk->pos == 0) return NULL;
+  printf("pos: %zu\n", stk->pos);
+  void *val = stack_peek(stk);
+  stk->pos--;
+  return val;
+}
+
 int main(void) {
   const int data[] = {1, 2, 3, 4};
   stack *a = stack_from_arr(data);
-  printf("%zu %zu %zu ", a->capacity, a->elem_size, a->pos);
-  printf("%d", ((int *)a->data)[a->pos]);
+  int val;
+  while ((val = *(int *)stack_pop(a))) {
+    printf("%d\n", val);
+  }
   return 0;
 }
