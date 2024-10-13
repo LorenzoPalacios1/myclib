@@ -37,6 +37,14 @@ stack *_stack_from_arr(const void *const arr, const size_t len,
 }
 
 void *stack_peek(stack *const stk) {
+  /*
+   * clang from `llvm-mingw-20241001-ucrt-x86_64` removes the below statement
+   * when run with any optimizer flags besides `-O0` and `-Os`, which produce
+   * the expected segmentation fault.
+   *
+   * Full commandline:
+   * clang -O0 -pedantic -std=c11 -Wall -Werror -Wextra stack.c -o stk && stk
+   */
   if (stk->pos == 0) return NULL;
   /*
    * Subtracting by one since `pos` is equivalent to the current stack length
@@ -46,6 +54,7 @@ void *stack_peek(stack *const stk) {
 }
 
 void *stack_pop(stack *const stk) {
+  /* Ditto. The below conditional is removed. */
   if (stk->pos == 0) return NULL;
   printf("pos: %zu\n", stk->pos);
   void *val = stack_peek(stk);
@@ -56,9 +65,14 @@ void *stack_pop(stack *const stk) {
 int main(void) {
   const int data[] = {1, 2, 3, 4};
   stack *a = stack_from_arr(data);
-  int val;
-  while ((val = *(int *)stack_pop(a))) {
-    printf("%d\n", val);
+  int *val;
+  /*
+   * This loop should segfault upon reaching the end of the stack since
+   * `stack_pop()` would return `NULL` which is then dereferenced in the loop
+   * condition.
+   */
+  while ((val = stack_pop(a))) {
+    printf("%d\n", *val);
   }
   return 0;
 }
