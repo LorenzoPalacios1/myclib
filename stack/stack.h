@@ -7,8 +7,9 @@
 typedef struct {
   void *data;
   size_t capacity;
+  size_t used_capacity;
   size_t elem_size;
-  size_t pos;
+  size_t length;
 } stack;
 
 #include <stddef.h>
@@ -53,13 +54,13 @@ void *stack_pop(stack *stk);
  * \return A pointer associated with the contents of `stk` or `NULL` upon
  * failure.
  */
-stack *stack_push(stack *stk);
+stack *stack_push(stack *stk, const void *const elem);
 
 /*
- * Frees the memory used by `stk` and invalidates the passed pointer associated
- * with it.
+ * Frees the memory used by `stk` and invalidates the passed pointer
+ * associated with it.
  */
-void delete_stack(stack **stk);
+void delete_stack(stack **const stk);
 
 /*
  * Same as `delete_stack()`, except this function will write zeros to the memory
