@@ -69,13 +69,21 @@ stack *stack_push(stack *stk, const void *const elem) {
   return stk;
 }
 
+void delete_stack(stack **const stk) {
+  free(*stk);
+  *stk = NULL;
+}
+
+void delete_stack_s(stack **stk) {
+  memset(*stk, 0, (*stk)->capacity);
+  delete_stack(stk);
+}
+
 int main(void) {
   const size_t data[] = {1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
                          15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
                          29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40};
   stack *a = stack_from_arr(data);
-  a->used_capacity -= a->elem_size;
-  a->length--;
   const size_t num = 3;
   a = stack_push(a, &num);
   const size_t *val;
