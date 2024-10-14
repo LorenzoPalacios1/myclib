@@ -20,7 +20,7 @@ stack *create_stack(const size_t num_elems, const size_t elem_size) {
   stk->capacity = STACK_CAPACITY;
   stk->used_capacity = 0;
   stk->elem_size = elem_size;
-  stk->data = stk + 1;
+  stk->data = stk + 1; /* Increment past the stack header. */
   stk->length = 0;
   return stk;
 }
@@ -30,7 +30,7 @@ stack *_stack_from_arr(const void *const arr, const size_t len,
   stack *const stk = create_stack(len, elem_size);
   if (stk == NULL) return NULL;
   stk->length = len;
-  stk->used_capacity = elem_size * len;
+  stk->used_capacity = stk->capacity;
   /*
    * Since a backward stack requires its constituent elements to be
    * laid out in reverse order, we iterate from the last element of
@@ -65,6 +65,7 @@ stack *resize_stack(stack *stk, size_t new_size) {
   stk = realloc(stk, new_size + sizeof(stack));
   if (stk == NULL) return NULL;
   stk->capacity = new_size;
+  stk->data = stk + 1; /* Increment past the stack header. */
   return stk;
 }
 
@@ -100,11 +101,19 @@ stack *stack_push(stack *stk, const void *const elem) {
 }
 
 int main(void) {
-  stack *a = create_stack(12, sizeof(size_t));
+  const size_t data[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+  stack *a = stack_from_arr(data);
   const size_t *val;
-  for (size_t i = 0; (a = stack_push(a, &i)) && (val = stack_peek(a)); i++)
-    printf("%zu | len: %zu | used: %zu | free: %zu\n", *val, a->length,
-           a->used_capacity, a->capacity - a->used_capacity);
+  for (size_t i = sizeof(data) / sizeof(*data) + 1; i < 200; i++) {
+    a = stack_push(a, &i);
+    if (a == NULL) return 1;
+    val = stack_peek(a);
+    if (val == NULL) break;
+    printf(
+        "value: %zu\ncapacity: %zu\nelem_size: %zu\nlength: "
+        "%zu\nused_capacity: %zu\n",
+        *val, a->capacity, a->elem_size, a->length, a->used_capacity);
+  }
   delete_stack(&a);
   return 0;
 }
