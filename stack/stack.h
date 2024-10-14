@@ -1,6 +1,11 @@
 #ifndef STACK_H
 #define STACK_H
 
+/*
+ * Define `STACK_WANT_NO_HEAP_STACK` to include support for stacks of automatic
+ * storage.
+ */
+
 #include <stdlib.h>
 
 typedef struct {
@@ -95,14 +100,14 @@ void *stack_peek(stack *stk);
 void *stack_pop(stack *stk);
 
 /*
- * Adds a new element to `stk`, expanding if necessary.
+ * Adds `elem` to `stk`, expanding if necessary. `elem` will then be the new top
+ * element and will be returned by functions such as `stack_peek()`.
  *
  * \return A pointer associated with the contents of `stk` or `NULL` upon
  * failure.
  */
 stack *stack_push(stack *stk, const void *const elem);
 
-/* Define this macro to include support for stacks of automatic storage. */
 #ifdef STACK_WANT_NO_HEAP_STACK
 /* Ensures that each stack's allocation gets a fairly unique name. */
 #define STACK_NAME(local_stk) _stk_data_##local_stk
@@ -153,7 +158,8 @@ void *no_heap_stack_peek(stack *stk);
 void *no_heap_stack_pop(stack *stk);
 
 /*
- * Adds a new element to `stk` if space permits.
+ * Adds `elem` to `stk` if space permits. `elem` will then be the new top
+ * element and will be returned by functions such as `no_heap_stack_peek()`.
  *
  * \return `stk` if the element was added successfully or `NULL` upon failure.
  */
