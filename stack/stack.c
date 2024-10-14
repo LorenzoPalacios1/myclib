@@ -134,7 +134,7 @@ stack *stack_push(stack *stk, const void *const elem) {
   byte_t STACK_NAME(local_stk)[GET_STACK_ALLOC_SIZE(num_elems, _elem_size)]; \
   (local_stk) = (void *)STACK_NAME(local_stk);                               \
   (*(local_stk)).data = local_stk + 1;                                       \
-  (*(local_stk)).capacity = sizeof(STACK_NAME(local_stk));                   \
+  (*(local_stk)).capacity = num_elems * _elem_size;                          \
   (*(local_stk)).used_capacity = 0;                                          \
   (*(local_stk)).elem_size = _elem_size;                                     \
   (*(local_stk)).length = 0
@@ -157,8 +157,8 @@ stack *no_heap_stack_push(stack *stk, const void *const elem) {
 
 int main(void) {
   stack *local_stk;
-  new_stack_no_heap(local_stk, 1, sizeof(int));
-  for (size_t i = 0; i < 1000; i++) {
+  new_stack_no_heap(local_stk, 1000, sizeof(int));
+  for (size_t i = 0; i < 1001; i++) {
     printf(
         "capacity: %zu | elem_size: %zu | length: %zu | used_capacity: %zu\n",
         local_stk->capacity, local_stk->elem_size, local_stk->length,
