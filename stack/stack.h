@@ -28,12 +28,12 @@ typedef unsigned char byte_t;
 /* Creates a stack based off the elements in `arr`. */
 stack *_stack_from_arr(const void *arr, size_t len, size_t elem_size);
 
-/* Clears the elements of `stk` and resets its `length` to `0`. */
+/* Resets `stk->length` and `stk->used_capacity` to `0`. */
 void clear_stack(stack *stk);
 
 /*
- * Same as `clear_stack()`, except this function will also zero the memory
- * associated with `stk->data`.
+ * Same as `clear_stack()`, except this function will overwrite the contents of
+ * `stk->data` with zeros.
  */
 void clear_stack_s(stack *stk);
 
@@ -44,8 +44,8 @@ void clear_stack_s(stack *stk);
 void delete_stack(stack **const stk);
 
 /*
- * Same as `delete_stack()`, except this function will write zeros to the memory
- * used by `stk` before freeing.
+ * Same as `delete_stack()`, except this function will overwrite the contents of
+ * `stk` with zeros before freeing.
  */
 void delete_stack_s(stack **stk);
 
@@ -138,9 +138,14 @@ stack *stack_push(stack *stk, const void *const elem);
  * \note This stack will not modify the allocation of memory at `data`, however
  * it can modify the contents of `data` through `no_heap_stack_pop()` and
  * `no_heap_stack_push()`.
+ *
+ *
  */
-#define stack_interface(data, num_elems, _elem_size)
-
+#define stack_interface(local_stk, _data, num_elems, _elem_size) \
+  local_stk = {.data = _data,                                    \
+               .capacity = (num_elems) * (elem_size),            \
+               .used_capacity = (num_elems) * (elem_size),       \
+               .length = (num_elems)}
 /*
  * Returns the top element of `stk` without removing it.
  *
