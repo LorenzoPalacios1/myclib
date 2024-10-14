@@ -116,7 +116,7 @@ int main(void) {
    *
    * This snippet should output:
    *
-   * `1 (N/A: NULL dereference)`
+   * `1 (N/A: val is NULL)`
    */
   {
     const int data[] = {1, 2, 3, 4, 5};
@@ -142,7 +142,7 @@ int main(void) {
    *
    * This snippet could output:
    *
-   * 4 1600 36 1300
+   * 4 1600 20 1300 64
    */
   {
     const size_t elem_size = sizeof(int);
@@ -157,12 +157,11 @@ int main(void) {
     num_elems = 400;
     example_stack = resize_stack(example_stack, elem_size * num_elems);
     if (example_stack == NULL) return 1;
-    /* New, greater capacity*/
     printf("%zu ", example_stack->capacity);
 
     /* Downscaling by a factor of `example_stack->elem_size`. */
     num_elems = 5;
-    example_stack = resize_stack(example_stack, 7 * num_elems);
+    example_stack = resize_stack(example_stack, elem_size * num_elems);
     if (example_stack == NULL) return 1;
     printf("%zu ", example_stack->capacity);
 
@@ -173,6 +172,10 @@ int main(void) {
     printf("%zu ", example_stack->capacity);
 
     /* Downscaling by a non-factor of `example_stack->elem_size`. */
+    num_elems = 9;
+    example_stack = resize_stack(example_stack, 7 * num_elems);
+    if (example_stack == NULL) return 1;
+    printf("%zu ", example_stack->capacity);
   }
 
   return 0;
