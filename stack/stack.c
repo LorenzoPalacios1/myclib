@@ -54,7 +54,17 @@ void delete_stack_s(stack **stk) {
 }
 
 stack *expand_stack(stack *stk) {
-  return resize_stack(stk, STACK_EXPANSION_FACTOR * stk->capacity);
+  stack *new_stk = resize_stack(stk, STACK_EXPANSION_FACTOR * stk->capacity);
+  /*
+   * Reallocation may fail because the requested memory is too large.
+   * In this case, we fall back to the safer, yet generally less efficient
+   * option of only allocating enough memory for one new element in the stack.
+   * This has the likely side effect of requiring more later reallocations, but
+   * is more likely to ensure program stability.
+   */
+  if (new_stk == NULL)
+    new_stk = resize_stack(stk, stk->capacity + stk->elem_size);
+  return new_stk;
 }
 
 stack *resize_stack(stack *stk, size_t new_size) {
@@ -87,9 +97,7 @@ void *stack_pop(stack *const stk) {
 
 stack *stack_push(stack *stk, const void *const elem) {
   if (stk->used_capacity + stk->elem_size > stk->capacity) {
-    printf("original: %p\n", (void *)stk);
     stk = expand_stack(stk);
-    printf("after: %p\n", (void *)stk);
     if (stk == NULL) return NULL;
   }
   const size_t LENGTH = stk->length;
@@ -101,19 +109,9 @@ stack *stack_push(stack *stk, const void *const elem) {
 }
 
 int main(void) {
-  const size_t data[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-  stack *a = stack_from_arr(data);
-  const size_t *val;
-  for (size_t i = sizeof(data) / sizeof(*data) + 1; i < 200; i++) {
-    a = stack_push(a, &i);
-    if (a == NULL) return 1;
-    val = stack_peek(a);
-    if (val == NULL) break;
-    printf(
-        "value: %zu\ncapacity: %zu\nelem_size: %zu\nlength: "
-        "%zu\nused_capacity: %zu\n",
-        *val, a->capacity, a->elem_size, a->length, a->used_capacity);
-  }
+  stack *a = create_stack(12, sizeof(size_t));
+  for (size_t i = 0; (a = stack_push(a, &i)); i++);
   delete_stack(&a);
+  while (1);
   return 0;
 }
