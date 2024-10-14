@@ -110,42 +110,43 @@ stack *stack_push(stack *stk, const void *const elem);
 
 #ifdef STACK_INCL_NO_HEAP_STACK
 /* Ensures that each stack's allocation gets a fairly unique name. */
-#define STACK_NAME(local_stk) _stk_data_##local_stk
+#define GET_STACK_NAME(local_stk) _stk_data_##local_stk
 
 #define GET_STACK_ALLOC_SIZE(num_elems, elem_size) \
   ((num_elems) * (elem_size) + sizeof(stack))
+
 /*
- * Creates a stack with automatic storage duration at `local_stk`.
+ * Creates a stack with automatic storage duration.
  *
- * \param local_stk A pointer to a local variable of type `stack`.
+ * \param stk_id The identifer for the stack being assigned.
  * \param num_elems The maximum number of elements the stack will contain.
  * \param _elem_size The size of each element in the stack.
  */
-#define new_stack_no_heap(local_stk, num_elems, _elem_size)                  \
-  byte_t STACK_NAME(local_stk)[GET_STACK_ALLOC_SIZE(num_elems, _elem_size)]; \
-  (local_stk) = (void *)STACK_NAME(local_stk);                               \
-  (*(local_stk)).data = local_stk + 1;                                       \
-  (*(local_stk)).capacity = num_elems * _elem_size;                          \
-  (*(local_stk)).used_capacity = 0;                                          \
-  (*(local_stk)).elem_size = _elem_size;                                     \
-  (*(local_stk)).length = 0
+#define new_stack_no_heap(stk_id, num_elems, _elem_size)                      \
+  {.capacity = (num_elems) * (_elem_size),                                    \
+   .used_capacity = 0,                                                        \
+   .elem_size = _elem_size,                                                   \
+   .length = 0};                                                              \
+  byte_t GET_STACK_NAME(stk_id)[GET_STACK_ALLOC_SIZE(num_elems, _elem_size)]; \
+  (stk_id).data = GET_STACK_NAME(stk_id) + sizeof(stk_id);
 
 /*
  * Creates a stack of automatic storage duration which allocates memory solely
  * for the stack header (that is, the data members of `stack`). `stack->data`
  * will point to `data`.
  *
- * \note This stack will not modify the allocation of memory at `data`, however
- * it can modify the contents of `data` through `no_heap_stack_pop()` and
- * `no_heap_stack_push()`.
- *
- *
+ * \note This stack will not modify the allocation of memory at `data`,
+ * however it can modify the contents of `data` through `no_heap_stack_pop()`
+ * and `no_heap_stack_push()`.
+ * \note Unlike `new_stack_no_heap()`, this macro can be directly assigned to
+ * a stack definition.
  */
-#define stack_interface(local_stk, _data, num_elems, _elem_size) \
-  local_stk = {.data = _data,                                    \
-               .capacity = (num_elems) * (elem_size),            \
-               .used_capacity = (num_elems) * (elem_size),       \
-               .length = (num_elems)}
+#define stack_interface(_data, num_elems, _elem_size) \
+  {.data = _data,                                     \
+   .capacity = (num_elems) * (_elem_size),            \
+   .used_capacity = (num_elems) * (_elem_size),       \
+   .elem_size = _elem_size,                           \
+   .length = num_elems}
 /*
  * Returns the top element of `stk` without removing it.
  *
