@@ -1,5 +1,5 @@
-#ifndef STACKS_H
-#define STACKS_H
+#ifndef STACK_H
+#define STACK_H
 
 #include <stdlib.h>
 
@@ -27,7 +27,7 @@ stack *_stack_from_arr(const void *arr, size_t len, size_t elem_size);
  *
  * \return A pointer to an empty `stack` or `NULL` upon failure.
  */
-stack *create_stack(size_t num_elems, size_t elem_size);
+stack *new_stack(size_t num_elems, size_t elem_size);
 
 /*
  * Frees the memory used by `stk` and invalidates the passed pointer
@@ -91,4 +91,36 @@ void *stack_pop(stack *stk);
  */
 stack *stack_push(stack *stk, const void *const elem);
 
+/* Define this macro to include support for stacks of automatic storage. */
+#ifdef STACK_WANT_LOCAL_STACK
+/*
+ * Creates a stack with automatic storage duration at `local_stk`, thereby
+ * avoiding allocation on the heap.
+ *
+ * \param local_stk A pointer to a local variable of type `stack`.
+ * \param num_elems The maximum number of elements the stack will contain.
+ * \param _elem_size The size of each element in the stack.
+ */
+#define new_stack_no_heap(local_stk, num_elems, _elem_size)
+
+/*
+ * Returns the top element of `stk` without removing it.
+ *
+ * \return A pointer to the top element in `stk` or `NULL` if the end of the
+ * stack was reached.
+ */
+void *no_heap_stack_peek(stack *stk);
+
+/*
+ * Returns and removes the top element from `stk`.
+ *
+ * \return A pointer to the top element in `stk` or `NULL` if the end of the
+ * stack was reached.
+ */
+void *no_heap_stack_pop(stack *stk);
+
+/* Adds a new element to `stk` if space permits. */
+void no_heap_stack_push(stack *stk, const void *const elem);
+
+#endif
 #endif

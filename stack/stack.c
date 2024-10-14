@@ -1,3 +1,4 @@
+#define STACK_WANT_LOCAL_STACK
 #include "stack.h"
 
 #include <stdio.h>
@@ -13,7 +14,7 @@ static stack *alloc_stack(const size_t stack_capacity) {
   return malloc(stack_capacity + sizeof(stack));
 }
 
-stack *create_stack(const size_t num_elems, const size_t elem_size) {
+stack *new_stack(const size_t num_elems, const size_t elem_size) {
   const size_t STACK_CAPACITY = num_elems * elem_size;
   stack *const stk = alloc_stack(STACK_CAPACITY);
   if (stk == NULL) return NULL;
@@ -27,7 +28,7 @@ stack *create_stack(const size_t num_elems, const size_t elem_size) {
 
 stack *_stack_from_arr(const void *const arr, const size_t len,
                        const size_t elem_size) {
-  stack *const stk = create_stack(len, elem_size);
+  stack *const stk = new_stack(len, elem_size);
   if (stk == NULL) return NULL;
   stk->length = len;
   stk->used_capacity = stk->capacity;
@@ -115,4 +116,37 @@ stack *stack_push(stack *stk, const void *const elem) {
   stk->length++;
   stk->used_capacity += stk->elem_size;
   return stk;
+}
+
+#ifdef STACK_WANT_LOCAL_STACK
+#ifdef new_stack_no_heap
+#undef new_stack_no_heap
+#endif
+
+/* Ensures that each stack's allocation gets a fairly unique name. */
+#define STACK_NAME(local_stk) _stk_data_ ## local_stk
+
+#define new_stack_no_heap(local_stk, num_elems, _elem_size) \
+  byte_t STACK_NAME(local_stk)[(_elem_size) * (num_elems)]; \
+  (local_stk) = (void *)STACK_NAME(local_stk);              \
+  (*(local_stk)).data = local_stk + 1;                      \
+  (*(local_stk)).capacity = sizeof(STACK_NAME(local_stk));  \
+  (*(local_stk)).used_capacity = 0;                         \
+  (*(local_stk)).elem_size = _elem_size;                    \
+  (*(local_stk)).length = num_elems
+
+void *no_heap_stack_peek(stack *stk);
+
+void *no_heap_stack_pop(stack *stk);
+
+void no_heap_stack_push(stack *stk, const void *const elem);
+
+#endif
+
+int main(void) {
+  stack *local_stk;
+  new_stack_no_heap(local_stk, 3, 8);
+  stack *other_stk;
+  new_stack_no_heap(other_stk, 4, 5);
+  return 0;
 }
