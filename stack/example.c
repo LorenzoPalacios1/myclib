@@ -1,4 +1,8 @@
-#define STACK_WANT_NO_HEAP_STACK
+/*
+ * Define this to expose some functionality allowing the use of stacks without
+ * worry of dynamic memory.
+ */
+#define STACK_INCL_NO_HEAP_STACK
 #include <stdio.h>
 
 #include "stack.h"
@@ -80,7 +84,7 @@ int main(void) {
     stk_no_init_data = stack_push(stk_no_init_data, &RANDOM_VAL_2);
     if (stk_no_init_data == NULL) return 1;
 
-    /* 
+    /*
      * Since this is the last element to be pushed onto `stk_no_init_data`, it
      * will be the first to be popped.
      */

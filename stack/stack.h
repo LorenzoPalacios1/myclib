@@ -2,7 +2,7 @@
 #define STACK_H
 
 /*
- * Define `STACK_WANT_NO_HEAP_STACK` to include support for stacks of automatic
+ * Define `STACK_INCL_NO_HEAP_STACK` to include support for stacks of automatic
  * storage.
  */
 
@@ -108,7 +108,7 @@ void *stack_pop(stack *stk);
  */
 stack *stack_push(stack *stk, const void *const elem);
 
-#ifdef STACK_WANT_NO_HEAP_STACK
+#ifdef STACK_INCL_NO_HEAP_STACK
 /* Ensures that each stack's allocation gets a fairly unique name. */
 #define STACK_NAME(local_stk) _stk_data_##local_stk
 
