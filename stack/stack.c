@@ -61,6 +61,8 @@ stack *expand_stack(stack *stk) {
    * option of only allocating enough memory for one new element in the stack.
    * This has the likely side effect of requiring more later reallocations, but
    * is more likely to ensure program stability.
+   * Of course, if this also fails, then chances are the system is out of
+   * memory, so it's fine to return `NULL`.
    */
   if (new_stk == NULL)
     new_stk = resize_stack(stk, stk->capacity + stk->elem_size);
@@ -69,13 +71,19 @@ stack *expand_stack(stack *stk) {
 
 stack *resize_stack(stack *stk, size_t new_size) {
   {
-    const size_t ADDITIONAL_BYTES = new_size % stk->elem_size;
+    const size_t ADDITIONAL_BYTES = stk->elem_size - (new_size % stk->elem_size);
     if (ADDITIONAL_BYTES != 0) new_size += ADDITIONAL_BYTES;
   }
   stk = realloc(stk, new_size + sizeof(stack));
   if (stk == NULL) return NULL;
   stk->capacity = new_size;
   stk->data = stk + 1; /* Increment past the stack header. */
+  return stk;
+}
+
+stack *shrink_stack_to_fit(stack *stk) {
+  if (stk->capacity > stk->used_capacity)
+    stk = resize_stack(stk, stk->used_capacity);
   return stk;
 }
 
@@ -109,9 +117,10 @@ stack *stack_push(stack *stk, const void *const elem) {
 }
 
 int main(void) {
-  stack *a = create_stack(12, sizeof(size_t));
-  for (size_t i = 0; (a = stack_push(a, &i)); i++);
+  stack *a = create_stack(1, 93);
+  printf("%zu\n", a->capacity);
+  a = resize_stack(a, 1233);
+  printf("%zu\n%zu", a->capacity, a->capacity % a->elem_size);
   delete_stack(&a);
-  while (1);
   return 0;
 }

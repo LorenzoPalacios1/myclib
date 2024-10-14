@@ -62,6 +62,12 @@ stack *expand_stack(stack *stk);
  */
 stack *resize_stack(stack *stk, size_t new_size);
 
+/*
+ * Shrinks the memory used by `stk->data` to `stk->used_capacity`.
+ *
+ * \return A pointer associated with the contents of `stk` or `NULL` upon
+ * failure.
+ */
 stack *shrink_stack_to_fit(stack *stk);
 
 /*
