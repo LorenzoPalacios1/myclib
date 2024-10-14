@@ -119,8 +119,12 @@ void *no_heap_stack_peek(stack *stk);
  */
 void *no_heap_stack_pop(stack *stk);
 
-/* Adds a new element to `stk` if space permits. */
-void no_heap_stack_push(stack *stk, const void *const elem);
+/*  
+ * Adds a new element to `stk` if space permits.
+ *
+ * \return `stk` if the element was added successfully or `NULL` upon failure.
+ */
+stack *no_heap_stack_push(stack *stk, const void *const elem);
 
 #endif
 #endif

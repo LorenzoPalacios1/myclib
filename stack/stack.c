@@ -124,29 +124,44 @@ stack *stack_push(stack *stk, const void *const elem) {
 #endif
 
 /* Ensures that each stack's allocation gets a fairly unique name. */
-#define STACK_NAME(local_stk) _stk_data_ ## local_stk
+#define STACK_NAME(local_stk) _stk_data_##local_stk
 
-#define new_stack_no_heap(local_stk, num_elems, _elem_size) \
-  byte_t STACK_NAME(local_stk)[(_elem_size) * (num_elems)]; \
-  (local_stk) = (void *)STACK_NAME(local_stk);              \
-  (*(local_stk)).data = local_stk + 1;                      \
-  (*(local_stk)).capacity = sizeof(STACK_NAME(local_stk));  \
-  (*(local_stk)).used_capacity = 0;                         \
-  (*(local_stk)).elem_size = _elem_size;                    \
+#define GET_STACK_ALLOC_SIZE(num_elems, elem_size) \
+  ((num_elems) * (elem_size) + sizeof(stack))
+
+#define new_stack_no_heap(local_stk, num_elems, _elem_size)                  \
+  byte_t STACK_NAME(local_stk)[GET_STACK_ALLOC_SIZE(num_elems, _elem_size)]; \
+  (local_stk) = (void *)STACK_NAME(local_stk);                               \
+  (*(local_stk)).data = local_stk + 1;                                       \
+  (*(local_stk)).capacity = sizeof(STACK_NAME(local_stk));                   \
+  (*(local_stk)).used_capacity = 0;                                          \
+  (*(local_stk)).elem_size = _elem_size;                                     \
   (*(local_stk)).length = num_elems
 
-void *no_heap_stack_peek(stack *stk);
+void *no_heap_stack_peek(stack *stk) { return stack_peek(stk); }
 
-void *no_heap_stack_pop(stack *stk);
+void *no_heap_stack_pop(stack *stk) { return stack_pop(stk); }
 
-void no_heap_stack_push(stack *stk, const void *const elem);
+stack *no_heap_stack_push(stack *stk, const void *const elem) {
+  if (stk->used_capacity + stk->elem_size > stk->capacity) return NULL;
+  const size_t LENGTH = stk->length;
+  const size_t ELEM_SIZE = stk->elem_size;
+  memcpy((byte_t *)stk->data + LENGTH * ELEM_SIZE, elem, ELEM_SIZE);
+  stk->length++;
+  stk->used_capacity += stk->elem_size;
+  return stk;
+}
 
 #endif
 
 int main(void) {
   stack *local_stk;
-  new_stack_no_heap(local_stk, 3, 8);
-  stack *other_stk;
-  new_stack_no_heap(other_stk, 4, 5);
+  new_stack_no_heap(local_stk, 1, sizeof(int));
+  for (size_t i = 0; i < 1; i++) {
+    no_heap_stack_push(local_stk, &i);
+    const int *const val = no_heap_stack_peek(local_stk);
+    if (val == NULL) break;
+    printf("%d\n", *val);
+  }
   return 0;
 }
