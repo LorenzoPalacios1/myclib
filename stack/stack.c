@@ -80,9 +80,8 @@ stack *expand_stack(stack *stk) {
 
 stack *resize_stack(stack *stk, size_t new_size) {
   {
-    const size_t ADDITIONAL_BYTES =
-        stk->elem_size - (new_size % stk->elem_size);
-    if (ADDITIONAL_BYTES != 0) new_size += ADDITIONAL_BYTES;
+    const size_t SIZE_DIFF = new_size % stk->elem_size;
+    if (SIZE_DIFF != 0) new_size += stk->elem_size - SIZE_DIFF;
   }
   stk = realloc(stk, new_size + sizeof(stack));
   if (stk == NULL) return NULL;
