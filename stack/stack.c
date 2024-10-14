@@ -136,7 +136,7 @@ stack *stack_push(stack *stk, const void *const elem) {
   (*(local_stk)).capacity = sizeof(STACK_NAME(local_stk));                   \
   (*(local_stk)).used_capacity = 0;                                          \
   (*(local_stk)).elem_size = _elem_size;                                     \
-  (*(local_stk)).length = num_elems
+  (*(local_stk)).length = 0
 
 void *no_heap_stack_peek(stack *stk) { return stack_peek(stk); }
 
@@ -156,12 +156,12 @@ stack *no_heap_stack_push(stack *stk, const void *const elem) {
 
 int main(void) {
   stack *local_stk;
-  new_stack_no_heap(local_stk, 1, sizeof(int));
-  for (size_t i = 0; i < 1; i++) {
+  new_stack_no_heap(local_stk, 100, sizeof(int));
+  for (size_t i = 0; i < 100; i++) {
     no_heap_stack_push(local_stk, &i);
     const int *const val = no_heap_stack_peek(local_stk);
     if (val == NULL) break;
-    printf("%d\n", *val);
+    printf("value: %d\n", *val);
   }
   return 0;
 }
