@@ -8,9 +8,6 @@
 #include "stack.h"
 
 int main(void) {
-  const int data[] = {1, 2, 3, 4, 5};
-  const size_t DATA_LEN = sizeof(data) / sizeof(*data);
-  const size_t DATA_ELEM_SIZE = sizeof(*data);
   /*
    * Example usage of `_stack_from_arr()`.
    *
@@ -19,6 +16,9 @@ int main(void) {
    * `1 2 3 4 5 `
    */
   {
+    const int data[] = {1, 2, 3, 4, 5};
+    const size_t DATA_LEN = sizeof(data) / sizeof(*data);
+    const size_t DATA_ELEM_SIZE = sizeof(*data);
     stack *stk_from_arr = _stack_from_arr(data, DATA_LEN, DATA_ELEM_SIZE);
 
     /* Printing and popping all of the values in `stk_from_arr`. */
@@ -42,6 +42,7 @@ int main(void) {
    * `1 2 3 4 5 `
    */
   {
+    const int data[] = {1, 2, 3, 4, 5};
     stack *stk_from_arr_macro = stack_from_arr(data);
 
     /* Printing and popping all of the values in `stk_from_arr_macro`. */
@@ -64,9 +65,12 @@ int main(void) {
    * `2147483647 1 0 5 4 3 2 1 `
    */
   {
-    const size_t INITIAL_NUM_ELEMS = DATA_LEN;
-    const size_t ELEM_SIZE = sizeof(int);
-    stack *stk_no_init_data = new_stack(INITIAL_NUM_ELEMS, ELEM_SIZE);
+    const int data[] = {1, 2, 3, 4, 5};
+    const size_t DATA_LEN = sizeof(data) / sizeof(*data);
+    const size_t DATA_ELEM_SIZE = sizeof(*data);
+
+    const size_t INITIAL_NUM_ELEMS = 5;
+    stack *stk_no_init_data = new_stack(INITIAL_NUM_ELEMS, DATA_ELEM_SIZE);
 
     /* Pushing the elements of `data` to `stk_no_init_data`. */
     for (size_t i = 0; i < DATA_LEN; i++) {
