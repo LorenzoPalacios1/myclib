@@ -120,20 +120,20 @@ int main(void) {
    */
   {
     const int data[] = {1, 2, 3, 4, 5};
-    stack *example_stack = stack_from_arr(data);
+    stack *example_stk = stack_from_arr(data);
 
-    /* Print the top value of `example_stack`. */
-    int *val = stack_peek(example_stack);
+    /* Print the top value of `example_stk`. */
+    int *val = stack_peek(example_stk);
     if (val == NULL) return 1;
     printf("%d ", *val);
 
-    clear_stack(example_stack);
+    clear_stack(example_stk);
 
-    /* Attempt to print the top value of `example_stack` again. */
-    val = stack_peek(example_stack);
+    /* Attempt to print the top value of `example_stk` again. */
+    val = stack_peek(example_stk);
     if (val == NULL) printf("(N/A: val is NULL)");
 
-    delete_stack(&example_stack);
+    delete_stack(&example_stk);
     putchar('\n');
   }
 
@@ -142,40 +142,75 @@ int main(void) {
    *
    * This snippet could output:
    *
-   * 4 1600 20 1300 64
+   * `4 1600 20 1300 64`
    */
   {
     const size_t elem_size = sizeof(int);
     size_t num_elems = 1;
-    stack *example_stack = new_stack(num_elems, elem_size);
-    if (example_stack == NULL) return 1;
+    stack *example_stk = new_stack(num_elems, elem_size);
+    if (example_stk == NULL) return 1;
 
     /* Initial capacity. */
-    printf("%zu ", example_stack->capacity);
+    printf("%zu ", example_stk->capacity);
 
-    /* Upscaling by a factor of `example_stack->elem_size`. */
+    /* Upscaling by a factor of `example_stk->elem_size`. */
     num_elems = 400;
-    example_stack = resize_stack(example_stack, elem_size * num_elems);
-    if (example_stack == NULL) return 1;
-    printf("%zu ", example_stack->capacity);
+    example_stk = resize_stack(example_stk, elem_size * num_elems);
+    if (example_stk == NULL) return 1;
+    printf("%zu ", example_stk->capacity);
 
-    /* Downscaling by a factor of `example_stack->elem_size`. */
+    /* Downscaling by a factor of `example_stk->elem_size`. */
     num_elems = 5;
-    example_stack = resize_stack(example_stack, elem_size * num_elems);
-    if (example_stack == NULL) return 1;
-    printf("%zu ", example_stack->capacity);
+    example_stk = resize_stack(example_stk, elem_size * num_elems);
+    if (example_stk == NULL) return 1;
+    printf("%zu ", example_stk->capacity);
 
-    /* Upscaling by a non-factor of `example_stack->elem_size`. */
+    /* Upscaling by a non-factor of `example_stk->elem_size`. */
     num_elems = 100;
-    example_stack = resize_stack(example_stack, 13 * num_elems);
-    if (example_stack == NULL) return 1;
-    printf("%zu ", example_stack->capacity);
+    example_stk = resize_stack(example_stk, 13 * num_elems);
+    if (example_stk == NULL) return 1;
+    printf("%zu ", example_stk->capacity);
 
-    /* Downscaling by a non-factor of `example_stack->elem_size`. */
+    /* Downscaling by a non-factor of `example_stk->elem_size`. */
     num_elems = 9;
-    example_stack = resize_stack(example_stack, 7 * num_elems);
-    if (example_stack == NULL) return 1;
-    printf("%zu ", example_stack->capacity);
+    example_stk = resize_stack(example_stk, 7 * num_elems);
+    if (example_stk == NULL) return 1;
+    printf("%zu", example_stk->capacity);
+
+    delete_stack(&example_stk);
+    putchar('\n');
+  }
+
+  /*
+   * Example usage of `shrink_stack_to_fit()`. 
+   *
+   * This snippet could output:
+   * 
+   * `40 12`
+   */
+  {
+    const size_t MAX_NUM_ELEMS = 10;
+    const size_t ELEM_SIZE = sizeof(int);
+    stack *example_stk = new_stack(MAX_NUM_ELEMS, ELEM_SIZE);
+    if (example_stk == NULL) return 1;
+    
+    /* Initial capacity. */
+    printf("%zu ", example_stk->capacity);
+
+    const int RANDOM_VAL_1 = 3;
+    example_stk = stack_push(example_stk, &RANDOM_VAL_1);
+    const int RANDOM_VAL_2 = 932;
+    example_stk = stack_push(example_stk, &RANDOM_VAL_2);
+    const int RANDOM_VAL_3 = 0xD00D;
+    example_stk = stack_push(example_stk, &RANDOM_VAL_3);
+
+    example_stk = shrink_stack_to_fit(example_stk);
+    if (example_stk == NULL) return 1;
+
+    printf("%zu", example_stk->capacity);
+
+    delete_stack(&example_stk);
+    putchar('\n');
   }
 
   return 0;
