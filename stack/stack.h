@@ -1,7 +1,6 @@
 #ifndef STACKS_H
 #define STACKS_H
 
-#include <stddef.h>
 #include <stdlib.h>
 
 typedef struct {
@@ -11,8 +10,6 @@ typedef struct {
   size_t elem_size;
   size_t length;
 } stack;
-
-#include <stddef.h>
 
 /*
  * This is a convenience macro for `_stack_from_arr()`.
