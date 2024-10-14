@@ -1,4 +1,3 @@
-#define STACK_WANT_LOCAL_STACK
 #include "stack.h"
 
 #include <stdio.h>
@@ -7,8 +6,6 @@
 
 /* The factor by which to scale a stack's capacity by when expanding. */
 #define STACK_EXPANSION_FACTOR (2)
-
-typedef unsigned char byte_t;
 
 static stack *alloc_stack(const size_t stack_capacity) {
   return malloc(stack_capacity + sizeof(stack));
@@ -42,6 +39,17 @@ stack *_stack_from_arr(const void *const arr, const size_t len,
            (byte_t *)arr + arr_i * elem_size, elem_size);
   }
   return stk;
+}
+
+void clear_stack(stack *stk) {
+  stk->length = 0;
+  stk->used_capacity = 0;
+}
+
+void clear_stack_s(stack *stk) {
+  stk->length = 0;
+  stk->used_capacity = 0;
+  memset(stk->data, 0, stk->capacity);
 }
 
 void delete_stack(stack **const stk) {
@@ -119,26 +127,6 @@ stack *stack_push(stack *stk, const void *const elem) {
   return stk;
 }
 
-#ifdef STACK_WANT_LOCAL_STACK
-#ifdef new_stack_no_heap
-#undef new_stack_no_heap
-#endif
-
-/* Ensures that each stack's allocation gets a fairly unique name. */
-#define STACK_NAME(local_stk) _stk_data_##local_stk
-
-#define GET_STACK_ALLOC_SIZE(num_elems, elem_size) \
-  ((num_elems) * (elem_size) + sizeof(stack))
-
-#define new_stack_no_heap(local_stk, num_elems, _elem_size)                  \
-  byte_t STACK_NAME(local_stk)[GET_STACK_ALLOC_SIZE(num_elems, _elem_size)]; \
-  (local_stk) = (void *)STACK_NAME(local_stk);                               \
-  (*(local_stk)).data = local_stk + 1;                                       \
-  (*(local_stk)).capacity = num_elems * _elem_size;                          \
-  (*(local_stk)).used_capacity = 0;                                          \
-  (*(local_stk)).elem_size = _elem_size;                                     \
-  (*(local_stk)).length = 0
-
 void *no_heap_stack_peek(stack *stk) { return stack_peek(stk); }
 
 void *no_heap_stack_pop(stack *stk) { return stack_pop(stk); }
@@ -151,22 +139,4 @@ stack *no_heap_stack_push(stack *stk, const void *const elem) {
   stk->length++;
   stk->used_capacity += stk->elem_size;
   return stk;
-}
-
-#endif
-
-int main(void) {
-  stack *local_stk;
-  new_stack_no_heap(local_stk, 1000, sizeof(int));
-  for (size_t i = 0; i < 1001; i++) {
-    printf(
-        "capacity: %zu | elem_size: %zu | length: %zu | used_capacity: %zu\n",
-        local_stk->capacity, local_stk->elem_size, local_stk->length,
-        local_stk->used_capacity);
-    no_heap_stack_push(local_stk, &i);
-    const int *const val = no_heap_stack_pop(local_stk);
-    if (val == NULL) break;
-    printf("value: %d\n", *val);
-  }
-  return 0;
 }
