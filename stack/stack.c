@@ -126,11 +126,11 @@ stack *stack_push(stack *stk, const void *const elem) {
   return stk;
 }
 
-void *no_heap_stack_peek(stack *stk) { return stack_peek(stk); }
+void *no_heap_stack_peek(stack *const stk) { return stack_peek(stk); }
 
-void *no_heap_stack_pop(stack *stk) { return stack_pop(stk); }
+void *no_heap_stack_pop(stack *const stk) { return stack_pop(stk); }
 
-stack *no_heap_stack_push(stack *stk, const void *const elem) {
+stack *no_heap_stack_push(stack *const stk, const void *const elem) {
   if (stk->used_capacity + stk->elem_size > stk->capacity) return NULL;
   const size_t LENGTH = stk->length;
   const size_t ELEM_SIZE = stk->elem_size;
