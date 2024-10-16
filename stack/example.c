@@ -182,10 +182,10 @@ int main(void) {
   }
 
   /*
-   * Example usage of `shrink_stack_to_fit()`. 
+   * Example usage of `shrink_stack_to_fit()`.
    *
    * This snippet could output:
-   * 
+   *
    * `40 12`
    */
   {
@@ -193,7 +193,7 @@ int main(void) {
     const size_t ELEM_SIZE = sizeof(int);
     stack *example_stk = new_stack(MAX_NUM_ELEMS, ELEM_SIZE);
     if (example_stk == NULL) return 1;
-    
+
     /* Initial capacity. */
     printf("%zu ", example_stk->capacity);
 
@@ -213,5 +213,24 @@ int main(void) {
     putchar('\n');
   }
 
+  /* 
+   * Example usage of `stack_interface()`.
+   *
+   * This snippet should output:
+   * 
+   * `3 2 1` 
+   */
+  {
+    int data[] = {1, 2, 3};
+    stack data_interface_stk = stack_interface(data, sizeof(data) / sizeof(*data), sizeof(data));
+    int *val;
+    while ((val = no_heap_stack_peek(&data_interface_stk))) {
+      printf("%d ", *val);
+    }
+  }
+
+  {
+    stack heapless_stk = new_stack_no_heap(heapless_stk, 2, sizeof(int));
+  }
   return 0;
 }
