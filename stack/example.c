@@ -18,8 +18,7 @@ int main(void) {
   {
     const int data[] = {1, 2, 3, 4, 5};
     const size_t DATA_LEN = sizeof(data) / sizeof(*data);
-    const size_t DATA_ELEM_SIZE = sizeof(*data);
-    stack *stk_from_arr = _stack_from_arr(data, DATA_LEN, DATA_ELEM_SIZE);
+    stack *stk_from_arr = _stack_from_arr(data, DATA_LEN, sizeof(*data));
     if (stk_from_arr == NULL) return 1;
 
     /* Printing and popping all of the values in `stk_from_arr`. */
@@ -69,10 +68,9 @@ int main(void) {
   {
     const int data[] = {1, 2, 3, 4, 5};
     const size_t DATA_LEN = sizeof(data) / sizeof(*data);
-    const size_t DATA_ELEM_SIZE = sizeof(*data);
 
     const size_t INITIAL_NUM_ELEMS = 5;
-    stack *stk_no_init_data = new_stack(INITIAL_NUM_ELEMS, DATA_ELEM_SIZE);
+    stack *stk_no_init_data = new_stack(INITIAL_NUM_ELEMS, sizeof(*data));
     if (stk_no_init_data == NULL) return 1;
 
     /* Pushing the elements of `data` to `stk_no_init_data`. */
@@ -145,9 +143,9 @@ int main(void) {
    * `4 1600 20 1300 64`
    */
   {
-    const size_t elem_size = sizeof(int);
+    const size_t ELEM_SIZE = sizeof(int);
     size_t num_elems = 1;
-    stack *example_stk = new_stack(num_elems, elem_size);
+    stack *example_stk = new_stack(num_elems, ELEM_SIZE);
     if (example_stk == NULL) return 1;
 
     /* Initial capacity. */
@@ -155,13 +153,13 @@ int main(void) {
 
     /* Upscaling by a factor of `example_stk->elem_size`. */
     num_elems = 400;
-    example_stk = resize_stack(example_stk, elem_size * num_elems);
+    example_stk = resize_stack(example_stk, ELEM_SIZE * num_elems);
     if (example_stk == NULL) return 1;
     printf("%zu ", example_stk->capacity);
 
     /* Downscaling by a factor of `example_stk->elem_size`. */
     num_elems = 5;
-    example_stk = resize_stack(example_stk, elem_size * num_elems);
+    example_stk = resize_stack(example_stk, ELEM_SIZE * num_elems);
     if (example_stk == NULL) return 1;
     printf("%zu ", example_stk->capacity);
 
@@ -214,7 +212,7 @@ int main(void) {
   }
 
   /*
-   * Example usage of `stack_interface()`.
+   * Example usage of `new_heapless_interface_stack()`.
    *
    * This snippet should output:
    *
@@ -222,19 +220,55 @@ int main(void) {
    */
   {
     int data[] = {1, 2, 3, 4, 5};
-    stack interface_stk =
-        new_interface_stack(data, sizeof(data) / sizeof(*data), sizeof(*data));
+    stack interface_stk = new_heapless_interface_stack(
+        data, sizeof(data) / sizeof(*data), sizeof(*data));
+
     int *val;
     while ((val = interface_stack_pop(&interface_stk))) {
       printf("%d ", *val);
     }
+
+    putchar('\n');
+    /*
+     * Deletion is unnecessary since `interface_stk` was not allocated on the
+     * heap.
+     */
   }
 
   /*
    * Example usage of `new_stack_no_heap()`
+   *
+   * This snippet should output:
+   *
+   * `4 3 2 1 0 `
    */
   {
-    stack no_heap_stk = heapless_new_stack(no_heap_stk, 2, sizeof(int));
+    const size_t NUM_ELEMS = 5;
+    stack heapless_stk =
+        heapless_new_stack(heapless_stk, NUM_ELEMS, sizeof(int));
+
+    /* Push values onto the stack until capacity is reached. */
+    for (size_t i = 0; i < NUM_ELEMS; i++) {
+      heapless_stack_push(&heapless_stk, &i);
+    }
+
+    /*
+     * This push should not succeed since the stack is full and cannot be
+     * resized.
+     */
+    const int RANDOM_VAL_1 = -1;
+    heapless_stack_push(&heapless_stk, &RANDOM_VAL_1);
+
+    /* Pop and print all of the values in the stack. */
+    int *val;
+    while ((val = heapless_stack_pop(&heapless_stk)) != NULL) {
+      printf("%d ", *val);
+    }
+    putchar('\n');
+    /*
+     * Deletion is unnecessary since `interface_stk` was not allocated on the
+     * heap.
+     */
   }
   return 0;
 }
