@@ -7,22 +7,6 @@
 /* The factor by which to scale a stack's capacity by when expanding. */
 #define STACK_EXPANSION_FACTOR (2)
 
-static stack *alloc_stack(const size_t stack_capacity) {
-  return malloc(stack_capacity + sizeof(stack));
-}
-
-stack *new_stack(const size_t num_elems, const size_t elem_size) {
-  const size_t STACK_CAPACITY = num_elems * elem_size;
-  stack *const stk = alloc_stack(STACK_CAPACITY);
-  if (stk == NULL) return NULL;
-  stk->capacity = STACK_CAPACITY;
-  stk->used_capacity = 0;
-  stk->elem_size = elem_size;
-  stk->data = stk + 1; /* Increment past the stack header. */
-  stk->length = 0;
-  return stk;
-}
-
 stack *_stack_from_arr(const void *const arr, const size_t len,
                        const size_t elem_size) {
   stack *const stk = new_stack(len, elem_size);
@@ -39,6 +23,10 @@ stack *_stack_from_arr(const void *const arr, const size_t len,
            (byte_t *)arr + arr_i * elem_size, elem_size);
   }
   return stk;
+}
+
+static stack *alloc_stack(const size_t stack_capacity) {
+  return malloc(stack_capacity + sizeof(stack));
 }
 
 void clear_stack(stack *stk) {
@@ -76,6 +64,18 @@ stack *expand_stack(stack *stk) {
   if (new_stk == NULL)
     new_stk = resize_stack(stk, stk->capacity + stk->elem_size);
   return new_stk;
+}
+
+stack *new_stack(const size_t num_elems, const size_t elem_size) {
+  const size_t STACK_CAPACITY = num_elems * elem_size;
+  stack *const stk = alloc_stack(STACK_CAPACITY);
+  if (stk == NULL) return NULL;
+  stk->capacity = STACK_CAPACITY;
+  stk->used_capacity = 0;
+  stk->elem_size = elem_size;
+  stk->data = stk + 1; /* Increment past the stack header. */
+  stk->length = 0;
+  return stk;
 }
 
 stack *resize_stack(stack *stk, size_t new_size) {
@@ -126,6 +126,8 @@ stack *stack_push(stack *stk, const void *const elem) {
   return stk;
 }
 
+/* For heapless stacks. */
+
 void *heapless_stack_peek(stack *const stk) { return stack_peek(stk); }
 
 void *heapless_stack_pop(stack *const stk) { return stack_pop(stk); }
@@ -138,6 +140,24 @@ stack *heapless_stack_push(stack *const stk, const void *const elem) {
   stk->length++;
   stk->used_capacity += stk->elem_size;
   return stk;
+}
+
+/* For stacks as interfaces. */
+
+stack *new_interface_stack(void *const data, const size_t len,
+                           const size_t elem_size) {
+  /*
+   * The stack itself should not be managing any memory as it is an interface.
+   * However, it should still have an allocation for its header.
+   */
+  stack *const stk_interface = alloc_stack(0);
+  if (stk_interface == NULL) return NULL;
+  stk_interface->data = data;
+  stk_interface->capacity = len * elem_size;
+  stk_interface->used_capacity = stk_interface->capacity;
+  stk_interface->elem_size = elem_size;
+  stk_interface->length = len;
+  return stk_interface;
 }
 
 void *interface_stack_pop(stack *const stk) { return stack_pop(stk); }

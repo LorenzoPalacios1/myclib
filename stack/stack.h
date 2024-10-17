@@ -58,19 +58,6 @@ void delete_stack_s(stack **stk);
 stack *expand_stack(stack *stk);
 
 /*
- * Creates a new stack whose `stack->data` is `data`; this function does not
- * copy the elements of `data` to an allocated block of memory. This function
- * allocates memory solely for a stack header (that is, the `stack` struct
- * type).
- *
- * \return A pointer to a stack header whose contents are associated with the
- * values at `data` or `NULL` upon failure.
- * \note Any changes made to the stack (particularly `stack_interface_push()`)
- * are reflected upon the contents of `data`.
- */
-stack *interface_stack(const void *data, size_t len, size_t elem_size);
-
-/*
  * Returns and removes the top element from `stk`.
  *
  * \return A pointer to the top element in `stk` or `NULL` if the end of the
@@ -90,8 +77,21 @@ void *interface_stack_peek(stack *stk);
  * Adds `elem` to `stk` if space permits (this can only be true if
  * `interface_stack_pop(stk)` was called). `elem` will then be the new top
  * element and will be returned by functions such as `interface_stack_peek()`.
+ *
+ * \return `stk` if the push was successful or `NULL` upon failure.
  */
 stack *interface_stack_push(stack *stk, const void *elem);
+
+/*
+ * Creates a stack header which interfaces upon the contents of `data`.
+ *
+ * \return A stack header associated with `data` or NULL upon failure.
+ * \note Any operations carried out on the stack may affect the contents stored
+ * at `data`. This is in contrast to the standard stack which allocates distinct
+ * memory for its contents. An example of such an operation would be
+ * `interface_stack_push()`.
+ */
+stack *new_interface_stack(void *data, size_t len, size_t elem_size);
 
 /*
  * Creates a new `stack` with enough capacity for `num_elems` elements
