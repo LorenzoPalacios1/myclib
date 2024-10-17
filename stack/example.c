@@ -1,8 +1,8 @@
 /*
- * Define this to expose some functionality allowing the use of stacks without
- * worry of dynamic memory.
+ * Define this in your source files above `#include "stack.h"` to expose some
+ * functionality allowing the use of stacks without worry of dynamic memory.
  */
-#define STACK_INCL_NO_HEAP_STACK
+#define STACK_INCL_HEAPLESS_STACK
 #include <stdio.h>
 
 #include "stack.h"
@@ -223,15 +223,18 @@ int main(void) {
   {
     int data[] = {1, 2, 3, 4, 5};
     stack interface_stk =
-        stack_interface(data, sizeof(data) / sizeof(*data), sizeof(*data));
+        new_interface_stack(data, sizeof(data) / sizeof(*data), sizeof(*data));
     int *val;
     while ((val = interface_stack_pop(&interface_stk))) {
       printf("%d ", *val);
     }
   }
 
+  /*
+   * Example usage of `new_stack_no_heap()`
+   */
   {
-    stack no_heap_stk = new_stack_no_heap(no_heap_stk, 2, sizeof(int));
+    stack no_heap_stk = heapless_new_stack(no_heap_stk, 2, sizeof(int));
   }
   return 0;
 }
