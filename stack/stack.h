@@ -144,7 +144,7 @@ void *stack_pop(stack *stk);
  */
 stack *stack_push(stack *stk, const void *const elem);
 
-#ifdef STACK_INCL_NO_HEAP_STACK
+#ifdef STACK_INCL_HEAPLESS_STACK
 /* Ensures that each stack's allocation gets a fairly unique name. */
 #define GET_STACK_NAME(local_stk) _stk_data_##local_stk
 
@@ -158,13 +158,19 @@ stack *stack_push(stack *stk, const void *const elem);
  * \param num_elems The maximum number of elements the stack will contain.
  * \param _elem_size The size of each element in the stack.
  */
-#define new_stack_no_heap(stk_id, num_elems, _elem_size)                      \
+#define heapless_new_stack(stk_id, num_elems, _elem_size)                     \
   {.capacity = (num_elems) * (_elem_size),                                    \
    .used_capacity = 0,                                                        \
    .elem_size = _elem_size,                                                   \
    .length = 0};                                                              \
   byte_t GET_STACK_NAME(stk_id)[GET_STACK_ALLOC_SIZE(num_elems, _elem_size)]; \
-  (stk_id).data = GET_STACK_NAME(stk_id) + sizeof(stk_id)
+  stk_id.data = GET_STACK_NAME(stk_id) + sizeof(stk_id)
+
+#define heapless_new_stack_arr(stk_id, arr)                               \
+  heapless_new_stack(stk_id, sizeof(arr) / sizeof *(arr), sizeof *(arr)); \
+  stk_id.capacity = sizeof(arr);                                          \
+  stk_id.used_capacity = sizeof(arr);                                     \
+  stk_id.length = sizeof(arr) / sizeof *(arr)
 
 /*
  * Creates a stack of automatic storage duration which allocates memory solely
@@ -172,14 +178,14 @@ stack *stack_push(stack *stk, const void *const elem);
  * will point to `data`.
  *
  * \note This stack will not modify the allocation of memory at `data`,
- * however it can modify the contents of `data` through `no_heap_stack_pop()`
- * and `no_heap_stack_push()`.
+ * however it can modify the contents of `data` through `heapless_stack_pop()`
+ * and `heapless_stack_push()`.
  */
-#define stack_interface(_data, num_elems, _elem_size) \
-  {.data = _data,                                     \
-   .capacity = (num_elems) * (_elem_size),            \
-   .used_capacity = (num_elems) * (_elem_size),       \
-   .elem_size = _elem_size,                           \
+#define new_interface_stack(_data, num_elems, _elem_size) \
+  {.data = _data,                                         \
+   .capacity = (num_elems) * (_elem_size),                \
+   .used_capacity = (num_elems) * (_elem_size),           \
+   .elem_size = _elem_size,                               \
    .length = num_elems}
 
 /*
@@ -188,7 +194,7 @@ stack *stack_push(stack *stk, const void *const elem);
  * \return A pointer to the top element in `stk` or `NULL` if the end of the
  * stack was reached.
  */
-void *no_heap_stack_peek(stack *stk);
+void *heapless_stack_peek(stack *stk);
 
 /*
  * Returns and removes the top element from `stk`.
@@ -196,14 +202,14 @@ void *no_heap_stack_peek(stack *stk);
  * \return A pointer to the top element in `stk` or `NULL` if the end of the
  * stack was reached.
  */
-void *no_heap_stack_pop(stack *stk);
+void *heapless_stack_pop(stack *stk);
 
 /*
  * Adds `elem` to `stk` if space permits. `elem` will then be the new top
- * element and will be returned by functions such as `no_heap_stack_peek()`.
+ * element and will be returned by functions such as `heapless_stack_peek()`.
  *
  * \return `stk` if the element was added successfully or `NULL` upon failure.
  */
-stack *no_heap_stack_push(stack *stk, const void *const elem);
+stack *heapless_stack_push(stack *stk, const void *const elem);
 #endif
 #endif
