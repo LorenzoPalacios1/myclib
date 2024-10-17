@@ -139,3 +139,11 @@ stack *no_heap_stack_push(stack *const stk, const void *const elem) {
   stk->used_capacity += stk->elem_size;
   return stk;
 }
+
+void *interface_stack_pop(stack *const stk) { return stack_pop(stk); }
+
+void *interface_stack_peek(stack *const stk) { return stack_peek(stk); }
+
+stack *interface_stack_push(stack *const stk, const void *const elem) {
+  return no_heap_stack_push(stk, elem);
+}

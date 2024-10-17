@@ -91,7 +91,7 @@ void *interface_stack_peek(stack *stk);
  * `interface_stack_pop(stk)` was called). `elem` will then be the new top
  * element and will be returned by functions such as `interface_stack_peek()`.
  */
-void interface_stack_push(stack *stk, const void *elem);
+stack *interface_stack_push(stack *stk, const void *elem);
 
 /*
  * Creates a new `stack` with enough capacity for `num_elems` elements
