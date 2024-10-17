@@ -2,7 +2,7 @@
 #define STACK_H
 
 /*
- * Define `STACK_INCL_NO_HEAP_STACK` to include support for stacks of automatic
+ * Define `STACK_INCL_HEAPLESS_STACK` to include support for stacks of automatic
  * storage.
  */
 

@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* The factor by which to scale a stack's capacity by when expanding. */
+/* The factor by which to expand a stack's capacity. */
 #define STACK_EXPANSION_FACTOR (2)
 
 stack *_stack_from_arr(const void *const arr, const size_t len,
