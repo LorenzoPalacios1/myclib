@@ -154,15 +154,27 @@ stack *stack_push(stack *stk, const void *const elem);
  * \param stk_id The identifer for the stack being assigned.
  * \param num_elems The maximum number of elements the stack will contain.
  * \param _elem_size The size of each element in the stack.
+ * \note This is a macro. Use with caution if any of the arguments have side
+ * effects.
  */
-#define heapless_new_stack(stk_id, num_elems, _elem_size)                     \
-  {.capacity = (num_elems) * (_elem_size),                                    \
-   .used_capacity = 0,                                                        \
-   .elem_size = _elem_size,                                                   \
-   .length = 0};                                                              \
-  byte_t GET_STACK_NAME(stk_id)[stk_id.capacity]; \
+#define heapless_new_stack(stk_id, num_elems, _elem_size) \
+  {.capacity = (num_elems) * (_elem_size),                \
+   .used_capacity = 0,                                    \
+   .elem_size = _elem_size,                               \
+   .length = 0};                                          \
+  byte_t GET_STACK_NAME(stk_id)[stk_id.capacity];         \
   stk_id.data = GET_STACK_NAME(stk_id)
 
+/*
+ * Creates a stack with automatic storage duration whose contents are a copy of
+ * `arr`.
+ *
+ * \param stk_id The identifer for the stack being assigned.
+ * \param num_elems The maximum number of elements the stack will contain.
+ * \param _elem_size The size of each element in the stack.
+ * \note This is a macro. Use with caution if any of the arguments have side
+ * effects.
+ */
 #define heapless_new_stack_arr(stk_id, arr)                               \
   heapless_new_stack(stk_id, sizeof(arr) / sizeof *(arr), sizeof *(arr)); \
   stk_id.capacity = sizeof(arr);                                          \
@@ -172,17 +184,21 @@ stack *stack_push(stack *stk, const void *const elem);
 /*
  * Creates a stack of automatic storage duration which allocates memory solely
  * for the stack header (that is, the data members of `stack`). `stack->data`
- * will point to `data`.
+ * will take the value of the pointer, `data`.
+ *
+ * \param _data A pointer to the data to be interfaced.
+ * \param num_elems The number of elements in `_data`.
+ * \param _elem_size The size of each element in bytes.
  *
  * \note This stack will not modify the allocation of memory at `data`,
  * however it can modify the contents of `data` through `heapless_stack_pop()`
  * and `heapless_stack_push()`.
  */
 #define new_heapless_interface_stack(_data, num_elems, _elem_size) \
-  {.data = _data,                                         \
-   .capacity = (num_elems) * (_elem_size),                \
-   .used_capacity = (num_elems) * (_elem_size),           \
-   .elem_size = _elem_size,                               \
+  {.data = _data,                                                  \
+   .capacity = (num_elems) * (_elem_size),                         \
+   .used_capacity = (num_elems) * (_elem_size),                    \
+   .elem_size = _elem_size,                                        \
    .length = num_elems}
 
 /*
