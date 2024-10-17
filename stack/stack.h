@@ -148,9 +148,6 @@ stack *stack_push(stack *stk, const void *const elem);
 /* Ensures that each stack's allocation gets a fairly unique name. */
 #define GET_STACK_NAME(local_stk) _stk_data_##local_stk
 
-#define GET_STACK_ALLOC_SIZE(num_elems, elem_size) \
-  ((num_elems) * (elem_size) + sizeof(stack))
-
 /*
  * Creates a stack with automatic storage duration.
  *
@@ -163,8 +160,8 @@ stack *stack_push(stack *stk, const void *const elem);
    .used_capacity = 0,                                                        \
    .elem_size = _elem_size,                                                   \
    .length = 0};                                                              \
-  byte_t GET_STACK_NAME(stk_id)[GET_STACK_ALLOC_SIZE(num_elems, _elem_size)]; \
-  stk_id.data = GET_STACK_NAME(stk_id) + sizeof(stk_id)
+  byte_t GET_STACK_NAME(stk_id)[stk_id.capacity]; \
+  stk_id.data = GET_STACK_NAME(stk_id)
 
 #define heapless_new_stack_arr(stk_id, arr)                               \
   heapless_new_stack(stk_id, sizeof(arr) / sizeof *(arr), sizeof *(arr)); \
@@ -181,7 +178,7 @@ stack *stack_push(stack *stk, const void *const elem);
  * however it can modify the contents of `data` through `heapless_stack_pop()`
  * and `heapless_stack_push()`.
  */
-#define new_interface_stack(_data, num_elems, _elem_size) \
+#define new_heapless_interface_stack(_data, num_elems, _elem_size) \
   {.data = _data,                                         \
    .capacity = (num_elems) * (_elem_size),                \
    .used_capacity = (num_elems) * (_elem_size),           \
